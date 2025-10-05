@@ -1,9 +1,9 @@
 # Event Echo - Memory Sharing App
 
-**Team Members:** Eric, Owen, Richard  
-**Course:** CS 501 – Mobile Application Development
-**Instructor:** Ronald Czik
-**Semester:** Fall 2025  
+- **Team Members:** Eric, Owen, Richard  
+- **Course:** CS 501 – Mobile Application Development
+- **Instructor:** Ronald Czik
+- **Semester:** Fall 2025  
 
 ---
 
