@@ -1,5 +1,7 @@
 package com.example.eventecho.ui.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
@@ -21,18 +23,19 @@ import com.example.eventecho.ui.screens.SignInScreen
 import com.example.eventecho.ui.screens.SignUpScreen
 import com.example.eventecho.ui.viewmodels.EventMapViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavGraph(navController: NavHostController) {
+    // shared event map view model
+    val viewModel = remember { EventMapViewModel(EventRepository(TicketmasterClient.apiService)) }
+
     NavHost(
         navController = navController,
         // start at the home screen
         startDestination = Routes.EventMapHome.route
     ) {
         // static routes
-        composable (Routes.EventMapHome.route) {
-            val viewModel = remember { EventMapViewModel(EventRepository(TicketmasterClient.apiService)) }
-            EventMapHomeScreen(navController, viewModel)
-        }
+        composable (Routes.EventMapHome.route) { EventMapHomeScreen(navController, viewModel) }
         composable(Routes.SignIn.route) { SignInScreen(navController) }
         composable(Routes.SignUp.route) { SignUpScreen(navController) }
         composable(Routes.CreateEvent.route) { CreateEventScreen(navController) }
@@ -47,7 +50,7 @@ fun AppNavGraph(navController: NavHostController) {
         ) {
             backStackEntry ->
             val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
-            EventDetailScreen(navController, eventId)
+            EventDetailScreen(navController, viewModel, eventId)
         }
 
         composable(

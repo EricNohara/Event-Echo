@@ -19,8 +19,7 @@ class EventMapViewModel(private val repo: EventRepository): ViewModel() {
     private val _events = MutableStateFlow<List<TicketmasterEvent>>(emptyList())
     val events: StateFlow<List<TicketmasterEvent>> = _events
 
-    // Inputs
-
+    // Inputs to the API
     // default Boston
     var lat: Double = 42.3555
     var long: Double = 71.0565
@@ -33,10 +32,11 @@ class EventMapViewModel(private val repo: EventRepository): ViewModel() {
     var radius: String = "50"
     var page: String = "1"
 
-    // helper function for calculating geo hashes
+    // helper function for calculating geo hashes used as input for the API
     fun getGeoHash(): String {
         return GeoHash.withCharacterPrecision(lat, long, 6).toBase32()
     }
+
     @RequiresApi(Build.VERSION_CODES.O)
     fun fetchEvents() {
         viewModelScope.launch {

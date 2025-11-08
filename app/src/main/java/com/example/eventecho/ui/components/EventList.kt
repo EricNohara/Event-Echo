@@ -13,13 +13,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.platform.LocalUriHandler
+import androidx.navigation.NavController
 import com.example.eventecho.data.api.ticketmaster.TicketmasterEvent
 
 @Composable
-fun EventList(events: List<TicketmasterEvent>) {
-    val uriHandler = LocalUriHandler.current
-
+fun EventList(
+    navController: NavController,
+    events: List<TicketmasterEvent>
+) {
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -30,11 +31,8 @@ fun EventList(events: List<TicketmasterEvent>) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-                        event.url?.let { url ->
-                            if (url.isNotBlank()) {
-                                uriHandler.openUri(url)
-                            }
-                        }
+                        // Navigate to detail screen with event ID
+                        navController.navigate("event_detail/${event.id}")
                     },
                 shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)

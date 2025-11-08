@@ -20,5 +20,8 @@ interface TicketmasterApi {
 
         // current page of events
         @Query("page") page: String = "1",
+
+        // sort by date
+        @Query("sort") sort: String = "date,asc"
     ): TicketmasterResponse
 }
