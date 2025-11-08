@@ -1,13 +1,14 @@
 package com.example.eventecho.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavController
+import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.eventecho.data.api.ticketmaster.EventRepository
+import com.example.eventecho.data.api.ticketmaster.TicketmasterClient
 import com.example.eventecho.ui.screens.AddToMemoryWallScreen
 import com.example.eventecho.ui.screens.CreateEventScreen
 import com.example.eventecho.ui.screens.EditProfileScreen
@@ -18,6 +19,7 @@ import com.example.eventecho.ui.screens.MemoryWallScreen
 import com.example.eventecho.ui.screens.SavedEventsScreen
 import com.example.eventecho.ui.screens.SignInScreen
 import com.example.eventecho.ui.screens.SignUpScreen
+import com.example.eventecho.ui.viewmodels.EventMapViewModel
 
 @Composable
 fun AppNavGraph(navController: NavHostController) {
@@ -27,7 +29,10 @@ fun AppNavGraph(navController: NavHostController) {
         startDestination = Routes.EventMapHome.route
     ) {
         // static routes
-        composable (Routes.EventMapHome.route) { EventMapHomeScreen(navController) }
+        composable (Routes.EventMapHome.route) {
+            val viewModel = remember { EventMapViewModel(EventRepository(TicketmasterClient.apiService)) }
+            EventMapHomeScreen(navController, viewModel)
+        }
         composable(Routes.SignIn.route) { SignInScreen(navController) }
         composable(Routes.SignUp.route) { SignUpScreen(navController) }
         composable(Routes.CreateEvent.route) { CreateEventScreen(navController) }

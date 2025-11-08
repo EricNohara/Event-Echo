@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -16,6 +18,17 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Load local.properties
+        val localProperties = project.rootProject.file("local.properties")
+        val properties = Properties().apply {
+            if (localProperties.exists()) {
+                load(localProperties.inputStream())
+            }
+        }
+        val ticketmasterApiKey = properties.getProperty("TICKETMASTER_API_KEY") ?: ""
+
+        buildConfigField("String", "TICKETMASTER_API_KEY", "\"$ticketmasterApiKey\"")
     }
 
     buildTypes {
@@ -36,11 +49,11 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -50,6 +63,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.compose.runtime)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -57,4 +72,16 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // icons
+    implementation("androidx.compose.material:material-icons-extended:1.4.3")
+
+    // for API calls
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+
+    // for geo hashing
+    implementation("ch.hsr:geohash:1.4.0")
 }
