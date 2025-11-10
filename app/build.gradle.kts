@@ -1,10 +1,11 @@
 import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
+
+
 
 android {
     namespace = "com.example.eventecho"
@@ -27,6 +28,8 @@ android {
             }
         }
         val ticketmasterApiKey = properties.getProperty("TICKETMASTER_API_KEY") ?: ""
+        val mapsApiKey = properties.getProperty("MAPS_API_KEY", "")
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
 
         buildConfigField("String", "TICKETMASTER_API_KEY", "\"$ticketmasterApiKey\"")
     }
@@ -54,6 +57,10 @@ android {
 }
 
 dependencies {
+//    implementation("com.google.maps.android:maps-compose:6.12.1")
+    implementation(libs.maps.compose)
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("com.google.android.gms:play-services-maps:19.2.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -85,4 +92,5 @@ dependencies {
 
     // for geo hashing
     implementation("ch.hsr:geohash:1.4.0")
+
 }
