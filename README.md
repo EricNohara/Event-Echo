@@ -18,13 +18,13 @@ Please find our documentation (Architecture Diagram, Progress Chart, Presentatio
 1. [Project Overview](#project-overview)
 2. [Build/Run Instructions](#buildrun-instructions)
 3. [App Flow](#app-flow)
-4. [Target Users & Problem Being Solved](#target-users-problem-being-solved)
+4. [Target Users & Problem Being Solved](#target-users--problem-being-solved)
 5. [Current Features](#current-features)
 6. [Planned Features](#planned-features)
    - [MVP Features](#mvp-features)
    - [Stretch Goals](#stretch-goals)
-7. [APIs & Sensors](#apis-sensors)
-8. [Team Roles & Responsibilities](#team-roles-responsibilities)
+7. [APIs & Sensors](#apis--sensors)
+8. [Team Roles & Responsibilities](#team-roles--responsibilities)
 
 ---
 
