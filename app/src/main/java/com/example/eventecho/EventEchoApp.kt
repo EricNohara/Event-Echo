@@ -1,5 +1,7 @@
 package com.example.eventecho
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalNavigationDrawer
@@ -14,6 +16,7 @@ import com.example.eventecho.ui.components.TopBar
 import com.example.eventecho.ui.navigation.AppNavGraph
 import com.example.eventecho.ui.navigation.Routes
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EventEchoApp() {
     val navController = rememberNavController()
