@@ -40,6 +40,15 @@ Additionally, users can **upvote or downvote** contributions, with the best ones
 
 ---
 
+## Build/Run Instructions
+
+1. **Download/Clone** this repository.
+2. Open the project folder in **Android Studio** (download Android Studio if not installed).
+3. **Sync** the project using **gradle** (Either automatically on startup or after)
+4. **Run the app** in Android Studio using a built-in emulator or connected mobile device.
+
+---
+
 ## App Flow
 
 1. Open the app and view a **map** with pins for nearby or upcoming events.
@@ -69,6 +78,15 @@ Event Echo solves these by providing a **shared, location-tied memory wall**.
 
 ---
 
+## Current Features
+
+- **Event Map:** Sample dynamic map created using Google Maps API to which event location pins will be added.
+- **Event Detail:** Users can view individual events in more detail.
+- **Event Collection & List:** Functional collection of events using Ticketmaster API (ViewModel + StateFlow), formatted in a clickable lazy list.
+- **Navigation:** Users can navigate using a hamburger menu, profile menu, and back buttons (Jetpack Navigation).
+
+---
+
 ## Planned Features
 
 ### MVP Features
@@ -80,10 +98,10 @@ Event Echo solves these by providing a **shared, location-tied memory wall**.
 - **Authentication:** Basic login/signup for user accounts.
 - **Database:** Store users, events, and memories.
 - **Storage:** Upload and serve user images.
+- **Event Discovery:** Filter or search events by tag, date, distance, or name (sorted by proximity and relevance).
 
 ### Stretch Goals
 
-- **Event Discovery:** Filter or search events by tag, date, distance, or name (sorted by proximity and relevance).
 - **Social Features:** Upvotes/downvotes, best contributor badge, event follows, notifications for nearby or new events.
 - **AR Timeline:** Optional AR view showing memories in physical space.
 - **Weather Integration:** Display event weather data for context.
@@ -115,4 +133,4 @@ Event Echo solves these by providing a **shared, location-tied memory wall**.
 | **Frontend Design**          | Create UI wireframes and interaction flows.                               |
 | **Frontend Development**     | Build the event map, memory wall, and upload interface.                   |
 
-_Work will be split evenly among members according to skill specialization._
+_Work has been/will be split evenly among members according to skill specialization and interest._
