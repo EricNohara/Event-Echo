@@ -16,15 +16,15 @@ Please find our documentation (Architecture Diagram, Progress Chart, Presentatio
 ## Table of Contents
 
 1. [Project Overview](#-project-overview)
-2. [App Flow](#-app-flow)
-3. [Target Users & Problem Being Solved](#-target-users--problem-being-solved)
-4. [Planned Features](#-planned-features)
+2. [Build/Run Instructions](#-build/run-instructions)
+3. [App Flow](#-app-flow)
+4. [Target Users & Problem Being Solved](#-target-users--problem-being-solved)
+5. [Current Features](#-current-features)
+6. [Planned Features](#-planned-features)
    - [MVP Features](#mvp-features)
    - [Stretch Goals](#stretch-goals)
-5. [APIs & Sensors](#-apis--sensors)
-6. [Team Roles & Responsibilities](#-team-roles--responsibilities)
-7. [Repository Info](#-repository-info)
-8. [Summary](#-summary)
+7. [APIs & Sensors](#-apis--sensors)
+8. [Team Roles & Responsibilities](#-team-roles--responsibilities)
 
 ---
 
