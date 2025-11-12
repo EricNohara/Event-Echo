@@ -44,8 +44,9 @@ Additionally, users can **upvote or downvote** contributions, with the best ones
 
 1. **Download/Clone** this repository.
 2. Open the project folder in **Android Studio** (download Android Studio if not installed).
-3. **Sync** the project using **gradle** (Either automatically on startup or after)
-4. **Run the app** in Android Studio using a built-in emulator or connected mobile device.
+3. **Sync** the project using **gradle** (Either automatically on startup or after).
+4. Obtain **API keys** for **Google Maps** and **Ticketmaster,** and set them in the project's **local.properties** as **TICKETMASTER_API_KEY** and **MAPS_API_KEY.**
+5. **Run the app** in Android Studio using a built-in emulator or connected mobile device.
 
 ---
 
