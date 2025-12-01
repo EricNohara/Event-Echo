@@ -21,6 +21,11 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
+data class SearchCircle(
+    val center: LatLng,
+    val radiusMeters: Double
+)
+
 class EventMapViewModel(private val repo: EventRepository) : ViewModel() {
 
     private val _events = MutableStateFlow<List<TicketmasterEvent>>(emptyList())
@@ -35,7 +40,11 @@ class EventMapViewModel(private val repo: EventRepository) : ViewModel() {
     //move camera once search by geocoder
     private val _cameraMoveEvent = MutableStateFlow<LatLng?>(null)
     val cameraMoveEvent: StateFlow<LatLng?> = _cameraMoveEvent
+    private val _searchCircle = MutableStateFlow<SearchCircle?>(null)
+    val searchCircle: StateFlow<SearchCircle?> = _searchCircle
 
+
+    private var lastFetchLocation: LatLng? = null
     fun performSearch(query: String, context: Context) {
         val query = query.trim()
         if (query.isBlank()) return
@@ -104,6 +113,12 @@ class EventMapViewModel(private val repo: EventRepository) : ViewModel() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun onMapCameraIdle(center: LatLng) {
+        val last = lastFetchLocation
+        if (last != null) {
+            val results = FloatArray(1)
+            android.location.Location.distanceBetween(last.latitude,last.longitude,center.latitude,center.longitude,results)
+            if (results[0] < 500) return
+        }
         fetchEvents(center.latitude, center.longitude)
     }
 
@@ -111,6 +126,16 @@ class EventMapViewModel(private val repo: EventRepository) : ViewModel() {
     private fun fetchEvents(lat: Double, long: Double) {
         viewModelScope.launch {
             try {
+                lastFetchLocation = LatLng(lat, long)
+
+                // ticketmaster uses miles, google maps uses meters.
+                val radiusInMiles = repo.defaultRadius.toDoubleOrNull() ?: 10.0
+                val radiusInMeters = radiusInMiles * 1609.34
+
+                _searchCircle.value = SearchCircle(
+                    center = LatLng(lat, long),
+                    radiusMeters = radiusInMeters
+                )
                 val geoPoint = GeoHash.withCharacterPrecision(lat, long, 6).toBase32()
                 val startDateTime = ZonedDateTime.now(ZoneOffset.UTC)
                     .withNano(0) //remove nanoseconds to simplify format

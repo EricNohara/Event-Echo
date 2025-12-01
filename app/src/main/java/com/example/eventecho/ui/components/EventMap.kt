@@ -3,8 +3,12 @@ package com.example.eventecho.ui.components
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import com.example.eventecho.ui.viewmodels.SearchCircle
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
+import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.Marker
@@ -16,13 +20,25 @@ fun EventMap(
     cameraPositionState: CameraPositionState,
     events: List<EventPin> = emptyList(),
     isMyLocationEnabled: Boolean = false,
-    onMarkerClick: (EventPin) -> Unit = {}
+    onMarkerClick: (EventPin) -> Unit = {},
+    searchCircle: SearchCircle? = null,
 ) {
     GoogleMap(
         modifier = modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,
         properties = MapProperties(isMyLocationEnabled = isMyLocationEnabled)
     ) {
+
+        searchCircle?.let { circle ->
+            Circle(
+                center = circle.center,
+                radius = circle.radiusMeters,
+                fillColor = Color(0x204285F4),
+                strokeColor = Color.Blue,
+                strokeWidth = 2f
+            )
+        }
+
         events.forEach { event ->
             Marker(
                 state = MarkerState(position = event.location),

@@ -43,6 +43,7 @@ fun EventMapHomeScreen(
     val events by viewModel.events.collectAsState()
     val mapPins by viewModel.mapPins.collectAsState()
     val cameraMoveEvent by viewModel.cameraMoveEvent.collectAsState() // signal to move map to location after search
+    val searchCircle by viewModel.searchCircle.collectAsState()
 
     // map and gps
     val cameraPositionState = rememberCameraPositionState()
@@ -134,7 +135,8 @@ fun EventMapHomeScreen(
                     isMyLocationEnabled = isLocationPermissionGranted,
                     onMarkerClick = { pin ->
                         navController.navigate("event_detail/${pin.id}")
-                    }
+                    },
+                    searchCircle = searchCircle
                 )
 
                 Box(modifier = Modifier.align(Alignment.TopCenter)) {
