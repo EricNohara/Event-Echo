@@ -91,7 +91,7 @@ fun SignUpScreen(navController: NavController) {
                                 error = null
 
                                 // Create Firestore user profile
-                                userRepo.createUserWithUsername(
+                                userRepo.createUser(
                                     uid = uid,
                                     email = email,
                                     username = username
