@@ -19,7 +19,6 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
-    drawerState: DrawerState,
     profileDrawerState: DrawerState,
     scope: CoroutineScope,
     title: String
@@ -30,15 +29,6 @@ fun TopBar(
                 text = title,
                 fontWeight = FontWeight.Bold,
             )
-        },
-        navigationIcon = {
-            IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                Icon(
-                    Icons.Filled.Menu,
-                    contentDescription = "Navigation Menu",
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
-            }
         },
         actions = {
             IconButton(onClick = {scope.launch { profileDrawerState.open() }}) {
