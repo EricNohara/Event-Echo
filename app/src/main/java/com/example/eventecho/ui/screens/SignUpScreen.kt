@@ -10,13 +10,16 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.example.eventecho.ui.navigation.Routes
+import com.example.eventecho.data.firebase.UserRepository
 
 @Composable
 fun SignUpScreen(navController: NavController) {
     val auth = FirebaseAuth.getInstance()
+    val userRepo = remember { UserRepository() }
+
     val user = auth.currentUser
 
-    // redirect if already signed in
+    // Redirect if already signed in
     LaunchedEffect(user) {
         if (user != null) {
             navController.navigate(Routes.EventMapHome.route) {
@@ -26,6 +29,7 @@ fun SignUpScreen(navController: NavController) {
     }
 
     var email by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
 
@@ -36,10 +40,21 @@ fun SignUpScreen(navController: NavController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Sign Up", style = MaterialTheme.typography.headlineMedium)
+        Text("Create an Account", style = MaterialTheme.typography.headlineMedium)
 
         Spacer(Modifier.height(20.dp))
 
+        // Username field
+        OutlinedTextField(
+            value = username,
+            onValueChange = { username = it },
+            label = { Text("Username") },
+            singleLine = true
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        // Email field
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
@@ -49,19 +64,22 @@ fun SignUpScreen(navController: NavController) {
 
         Spacer(Modifier.height(12.dp))
 
+        // Password field
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
             singleLine = true,
-            visualTransformation = PasswordVisualTransformation()  // 🔥 hides password
+            visualTransformation = PasswordVisualTransformation()
         )
 
         Spacer(Modifier.height(20.dp))
 
+        // Create Account button
         Button(onClick = {
-            // 🔎 Validation before hitting Firebase
+            // Validation before Firebase
             when {
+                username.isBlank() -> error = "Username cannot be empty"
                 email.isBlank() -> error = "Email cannot be empty"
                 password.isBlank() -> error = "Password cannot be empty"
                 password.length < 6 -> error = "Password must be at least 6 characters"
@@ -69,7 +87,17 @@ fun SignUpScreen(navController: NavController) {
                     auth.createUserWithEmailAndPassword(email, password)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
+                                val uid = auth.currentUser!!.uid
                                 error = null
+
+                                // Create Firestore user profile
+                                userRepo.createUserWithUsername(
+                                    uid = uid,
+                                    email = email,
+                                    username = username
+                                )
+
+                                // Navigate to the home screen
                                 navController.navigate(Routes.EventMapHome.route) {
                                     popUpTo(Routes.SignUp.route) { inclusive = true }
                                 }
