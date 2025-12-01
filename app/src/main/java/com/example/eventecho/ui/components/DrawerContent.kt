@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.eventecho.ui.navigation.Routes
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -110,8 +111,15 @@ fun ProfileDrawerContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-                        // No-op for now
+                        FirebaseAuth.getInstance().signOut()
+
+                        // close drawer
                         scope.launch { drawerState.close() }
+
+                        // navigate to sign-in screen (clear backstack)
+                        navController.navigate(Routes.SignIn.route) {
+                            popUpTo(0)   // clears all navigation history
+                        }
                     }
                     .padding(12.dp)
             )

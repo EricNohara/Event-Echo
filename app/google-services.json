@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "593770086298",
+    "project_id": "eventecho-a37a1",
+    "storage_bucket": "eventecho-a37a1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:593770086298:android:aaa4fc6ef2ff7800824423",
+        "android_client_info": {
+          "package_name": "com.example.eventecho"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDI4W1UxQBzf5qdkmLsxGdGRdPrPgYA8tE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

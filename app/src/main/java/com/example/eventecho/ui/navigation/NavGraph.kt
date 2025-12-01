@@ -18,6 +18,7 @@ import com.example.eventecho.ui.screens.EventDetailScreen
 import com.example.eventecho.ui.screens.EventMapHomeScreen
 import com.example.eventecho.ui.screens.MapFullScreen
 import com.example.eventecho.ui.screens.MemoryWallScreen
+import com.example.eventecho.ui.screens.ProfileScreen
 import com.example.eventecho.ui.screens.SavedEventsScreen
 import com.example.eventecho.ui.screens.SignInScreen
 import com.example.eventecho.ui.screens.SignUpScreen
@@ -32,7 +33,7 @@ fun AppNavGraph(navController: NavHostController) {
     NavHost(
         navController = navController,
         // start at the home screen
-        startDestination = Routes.EventMapHome.route
+        startDestination = Routes.SignIn.route
     ) {
         // static routes
         composable (Routes.EventMapHome.route) { EventMapHomeScreen(navController, viewModel) }
@@ -42,6 +43,7 @@ fun AppNavGraph(navController: NavHostController) {
         composable(Routes.EditProfile.route) { EditProfileScreen(navController) }
         composable(Routes.SavedEvents.route) { SavedEventsScreen(navController) }
         composable(Routes.MapFullScreen.route) { MapFullScreen(navController) }
+        composable(Routes.Profile.route) { ProfileScreen(navController)}
 
         // dynamic routes
         composable(
