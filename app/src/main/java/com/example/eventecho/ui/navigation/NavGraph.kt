@@ -63,7 +63,7 @@ fun AppNavGraph(navController: NavHostController) {
 
         composable(Routes.EditProfile.route) { EditProfileScreen(navController) }
         composable(Routes.SavedEvents.route) { SavedEventsScreen(navController) }
-        composable(Routes.MapFullScreen.route) { MapFullScreen(navController) }
+        composable(Routes.MapFullScreen.route) { MapFullScreen(navController, viewModel) }
         composable(Routes.Profile.route) { ProfileScreen(navController) }
 
         composable(

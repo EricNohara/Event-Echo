@@ -1,6 +1,5 @@
 package com.example.eventecho.ui.components
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,7 +18,9 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import com.example.eventecho.ui.dataclass.Event
+import com.example.eventecho.R
 
 @Composable
 fun EventList(
@@ -59,15 +60,25 @@ fun EventCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            // Image
+            // PICK IMAGE OR FALLBACK
+            val imageModel: Any =
+                if (event.imageUrl.isNullOrBlank()) {
+                    R.drawable.default_image   // <-- your fallback drawable
+                } else {
+                    event.imageUrl
+                }
+
             AsyncImage(
-                model = event.imageUrl,
+                model = imageModel,
                 contentDescription = null,
                 modifier = Modifier
                     .size(72.dp)
                     .aspectRatio(1f)
                     .padding(end = 12.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(10.dp)),
+                fallback = painterResource(R.drawable.default_image),
+                error = painterResource(R.drawable.default_image),
+                placeholder = painterResource(R.drawable.default_image)
             )
 
             Column(
