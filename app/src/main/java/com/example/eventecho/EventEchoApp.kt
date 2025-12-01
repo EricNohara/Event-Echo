@@ -33,7 +33,12 @@ fun EventEchoApp() {
     val navBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry.value?.destination?.route
     //Screens in which we want a bottomBar to be shown
-    val showBottomBar = currentRoute in listOf(Routes.EventMapHome.route, Routes.Profile.route)
+    val hideBottomBar = currentRoute in listOf(
+        Routes.SignIn.route,
+        Routes.SignUp.route
+    )
+
+    val showBottomBar = !hideBottomBar
 
     // title based on route
     val title = when (currentRoute) {
@@ -66,10 +71,9 @@ fun EventEchoApp() {
             Scaffold(
                 topBar = {
                     TopBar(
-                        drawerState = mainDrawerState,
                         profileDrawerState = profileDrawerState,
                         scope = scope,
-                        title = title
+                        title = "Event Echo"
                     )
                 },
                 bottomBar = {

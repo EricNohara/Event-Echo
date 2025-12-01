@@ -3,7 +3,7 @@ package com.example.eventecho.data.api.ticketmaster
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class EventRepository(private val api: TicketmasterApi) {
+class TicketmasterRepository(private val api: TicketmasterApi) {
     suspend fun getEvents(
         geoPoint: String,
         startDateTime: String,

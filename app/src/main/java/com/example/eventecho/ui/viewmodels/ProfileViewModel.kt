@@ -8,6 +8,7 @@ import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.Date
+import com.example.eventecho.ui.dataclass.ProfileUser
 
 data class ProfileUiState(
     val isLoading: Boolean = true,

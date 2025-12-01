@@ -7,6 +7,7 @@ import com.example.eventecho.data.firebase.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import com.example.eventecho.ui.dataclass.EditProfileUiState
 
 class EditProfileViewModel(
     private val repo: UserRepository = UserRepository()

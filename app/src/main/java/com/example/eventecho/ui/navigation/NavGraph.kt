@@ -1,15 +1,17 @@
 package com.example.eventecho.ui.navigation
 
+import android.app.Application
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.eventecho.data.api.ticketmaster.EventRepository
+import com.example.eventecho.data.firebase.EventRepository
 import com.example.eventecho.data.api.ticketmaster.TicketmasterClient
 import com.example.eventecho.ui.screens.AddToMemoryWallScreen
 import com.example.eventecho.ui.screens.CreateEventScreen
@@ -23,43 +25,68 @@ import com.example.eventecho.ui.screens.SavedEventsScreen
 import com.example.eventecho.ui.screens.SignInScreen
 import com.example.eventecho.ui.screens.SignUpScreen
 import com.example.eventecho.ui.viewmodels.EventMapViewModel
+import com.google.firebase.firestore.FirebaseFirestore
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavGraph(navController: NavHostController) {
-    // shared event map view model
-    val viewModel = remember { EventMapViewModel(EventRepository(TicketmasterClient.apiService)) }
+    val app = LocalContext.current.applicationContext as Application
+
+    // Create the repository ONCE
+    val repo = remember {
+        EventRepository(
+            api = TicketmasterClient.apiService,
+            firestore = FirebaseFirestore.getInstance()
+        )
+    }
+
+    // Create the shared map view model using that repo
+    val viewModel = remember {
+        EventMapViewModel(
+            app = app,
+            repo = repo
+        )
+    }
 
     NavHost(
         navController = navController,
-        // start at the home screen
         startDestination = Routes.SignIn.route
     ) {
-        // static routes
-        composable (Routes.EventMapHome.route) { EventMapHomeScreen(navController, viewModel) }
+        composable(Routes.EventMapHome.route) {
+            EventMapHomeScreen(navController, viewModel)
+        }
         composable(Routes.SignIn.route) { SignInScreen(navController) }
         composable(Routes.SignUp.route) { SignUpScreen(navController) }
-        composable(Routes.CreateEvent.route) { CreateEventScreen(navController) }
+
+        // FIX HERE — now repo exists
+        composable(Routes.CreateEvent.route) {
+            CreateEventScreen(
+                navController = navController,
+                repo = repo
+            )
+        }
+
         composable(Routes.EditProfile.route) { EditProfileScreen(navController) }
         composable(Routes.SavedEvents.route) { SavedEventsScreen(navController) }
         composable(Routes.MapFullScreen.route) { MapFullScreen(navController) }
-        composable(Routes.Profile.route) { ProfileScreen(navController)}
+        composable(Routes.Profile.route) { ProfileScreen(navController) }
 
-        // dynamic routes
         composable(
             route = Routes.EventDetail.route,
             arguments = listOf(navArgument("eventId") { type = NavType.StringType })
-        ) {
-            backStackEntry ->
+        ) { backStackEntry ->
             val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
-            EventDetailScreen(navController, viewModel, eventId)
+            EventDetailScreen(
+                navController = navController,
+                repo = viewModel.repo,
+                eventId = eventId
+            )
         }
 
         composable(
             route = Routes.MemoryWall.route,
             arguments = listOf(navArgument("eventId") { type = NavType.StringType })
-        ) {
-            backStackEntry ->
+        ) { backStackEntry ->
             val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
             MemoryWallScreen(navController, eventId)
         }
@@ -67,8 +94,7 @@ fun AppNavGraph(navController: NavHostController) {
         composable(
             route = Routes.AddToMemoryWall.route,
             arguments = listOf(navArgument("eventId") { type = NavType.StringType })
-        ) {
-                backStackEntry ->
+        ) { backStackEntry ->
             val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
             AddToMemoryWallScreen(navController, eventId)
         }

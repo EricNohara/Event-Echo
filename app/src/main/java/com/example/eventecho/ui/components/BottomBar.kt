@@ -2,7 +2,9 @@ package com.example.eventecho.ui.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -21,10 +23,22 @@ fun BottomBar(navController: NavController) {
         val currentRoute = navBackStackEntry?.destination?.route
 
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Map, contentDescription = "Map") },
-            label = { Text("Map") },
+            icon = { Icon(Icons.Default.Search, contentDescription = "Events") },
+            label = { Text("Events") },
             selected = currentRoute == Routes.EventMapHome.route,
             onClick = { navController.navigate(Routes.EventMapHome.route) }
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Map, contentDescription = "Map") },
+            label = { Text("Map") },
+            selected = currentRoute == Routes.MapFullScreen.route,
+            onClick = { navController.navigate(Routes.MapFullScreen.route) }
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.AddCircleOutline, contentDescription = "Create") },
+            label = { Text("Create") },
+            selected = currentRoute == Routes.CreateEvent.route,
+            onClick = { navController.navigate(Routes.CreateEvent.route) }
         )
         NavigationBarItem(
             icon = { Icon(Icons.Default.AccountCircle, contentDescription = "Profile") },

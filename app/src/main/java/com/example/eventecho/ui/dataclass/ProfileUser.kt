@@ -1,4 +1,4 @@
-package com.example.eventecho.ui.viewmodels
+package com.example.eventecho.ui.dataclass
 
 data class ProfileUser(
     val username: String = "",
