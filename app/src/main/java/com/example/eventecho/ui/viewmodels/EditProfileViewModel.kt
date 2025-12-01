@@ -1,34 +1,63 @@
 package com.example.eventecho.ui.viewmodels
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.eventecho.data.firebase.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
-data class EditProfileUiState(
-    val name: String = "bro",
-    val username: String = "",
-    val bio: String = "",
-    val isLoading: Boolean = false
-)
+class EditProfileViewModel(
+    private val repo: UserRepository = UserRepository()
+) : ViewModel() {
 
-class EditProfileViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(EditProfileUiState())
-    val uiState: StateFlow<EditProfileUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<EditProfileUiState> = _uiState
 
-    fun onNameChange(newValue: String) {
-        _uiState.value = _uiState.value.copy(name = newValue)
+    init {
+        loadUser()
     }
 
-    fun onUsernameChange(newValue: String) {
-        _uiState.value = _uiState.value.copy(username = newValue)
+    private fun loadUser() {
+        repo.getUser { data ->
+            _uiState.value = EditProfileUiState(
+                username = data["username"] as? String ?: "",
+                bio = data["bio"] as? String ?: "",
+                profilePicUrl = data["profilePicUrl"] as? String,
+                isLoading = false
+            )
+        }
     }
 
-    fun onBioChange(newValue: String) {
-        _uiState.value = _uiState.value.copy(bio = newValue)
+    fun onUsernameChange(value: String) {
+        _uiState.value = _uiState.value.copy(username = value)
     }
 
-    // TODO: Do this after backend implemneted
+    fun onBioChange(value: String) {
+        _uiState.value = _uiState.value.copy(bio = value)
+    }
+
     fun saveProfile() {
+        val state = _uiState.value
+        repo.updateUserFields(state.username, state.bio)
+    }
+
+    fun uploadImage(uri: Uri) {
+        _uiState.value = _uiState.value.copy(uploadingPicture = true)
+
+        repo.uploadProfilePicture(
+            imageUri = uri,
+            onSuccess = { url ->
+                repo.updateProfilePic(url)
+                _uiState.value = _uiState.value.copy(
+                    profilePicUrl = url,
+                    uploadingPicture = false
+                )
+            },
+            onError = {
+                _uiState.value = _uiState.value.copy(uploadingPicture = false)
+            }
+        )
     }
 }

@@ -1,27 +1,38 @@
 package com.example.eventecho.ui.screens
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.eventecho.ui.viewmodels.EditProfileViewModel
+import androidx.compose.ui.text.input.ImeAction
+import com.example.eventecho.R
 
 @Composable
 fun EditProfileScreen(
@@ -30,133 +41,221 @@ fun EditProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    val picker = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) viewModel.uploadImage(uri)
+    }
+
+    if (uiState.isLoading) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
     Scaffold(
         topBar = {
-            EditProfileTopBar(
+            SimpleTopBar(onBack = { navController.popBackStack() })
+        },
+        bottomBar = {
+            BottomActionBar(
                 onCancel = { navController.popBackStack() },
-                onDone = {
+                onSave = {
                     viewModel.saveProfile()
                     navController.popBackStack()
                 }
             )
-        }
+        },
+        containerColor = Color(0xFFF8F9FA)
     ) { padding ->
+
         Column(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp)
-                .verticalScroll(rememberScrollState()), //lets you scroll if keyboard opens
+                .padding(horizontal = 20.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
-            ProfilePhotoSection()
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(Modifier.height(16.dp))
 
-            SimpleTextField(
-                label = "Name",
-                value = uiState.name,
-                onValueChange = viewModel::onNameChange
+            AvatarSection(
+                profilePicUrl = uiState.profilePicUrl,
+                uploading = uiState.uploadingPicture,
+                onClick = { picker.launch("image/*") }
             )
 
-            SimpleTextField(
-                label = "Username",
+            Spacer(Modifier.height(28.dp))
+
+            ProfileInput(
+                label = "Display Name",
                 value = uiState.username,
-                onValueChange = viewModel::onUsernameChange
+                onChange = viewModel::onUsernameChange
             )
 
-            SimpleTextField(
+            ProfileInput(
                 label = "Bio",
                 value = uiState.bio,
-                onValueChange = viewModel::onBioChange,
-                singleLine = false,
-                maxLines = 4
+                onChange = viewModel::onBioChange,
+                maxLines = 8,
+                minLines = 6
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(90.dp)) // leave room above bottom buttons
         }
     }
 }
 
 @Composable
-fun EditProfileTopBar(onCancel: () -> Unit, onDone: () -> Unit) {
+fun SimpleTopBar(onBack: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
-            .padding(horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        TextButton(onClick = onCancel) {
-            Text("Cancel", fontSize = 16.sp, color = Color.Black)
+        IconButton(onClick = onBack) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
         }
 
-        Text("Edit Profile", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        Text(
+            "Edit Profile",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
 
-        TextButton(onClick = onDone) {
-            Text("Done", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Blue)
-        }
+        Spacer(modifier = Modifier.width(48.dp)) // keeps title centered
     }
 }
 
 @Composable
-fun ProfilePhotoSection() {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+fun AvatarSection(profilePicUrl: String?, uploading: Boolean, onClick: () -> Unit) {
+    Box(contentAlignment = Alignment.Center) {
+
         Box(
             modifier = Modifier
-                .size(80.dp)
+                .size(120.dp)
                 .clip(CircleShape)
-                .background(Color.LightGray),
+                .background(Color.White)
+                .clickable { onClick() },
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = null,
-                modifier = Modifier.size(60.dp),
-                tint = Color.Gray
-            )
+            when {
+                uploading -> CircularProgressIndicator()
+
+                profilePicUrl != null -> AsyncImage(
+                    model = profilePicUrl,
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier.fillMaxSize().clip(CircleShape)
+                )
+
+                else -> Image(
+                    painter = painterResource(R.drawable.default_avatar),
+                    contentDescription = "Default Avatar",
+                    modifier = Modifier.fillMaxSize().clip(CircleShape)
+                )
+            }
         }
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = "Change Profile Photo",
-            color = Color.Blue,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-//            modifier = Modifier.clickable() // TODO:  allow image upload
-        )
+
+        Box(
+            modifier = Modifier
+                .size(38.dp)
+                .align(Alignment.BottomEnd)
+                .clip(CircleShape)
+                .background(Color.White)
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Default.PhotoCamera, contentDescription = "Edit Photo")
+        }
+    }
+
+    Spacer(Modifier.height(12.dp))
+
+    Text("Click the camera icon to change avatar", fontSize = 13.sp, color = Color.Gray)
+}
+
+@Composable
+fun ProfileInput(
+    label: String,
+    value: String,
+    onChange: (String) -> Unit,
+    maxLines: Int = 1,
+    minLines: Int = 1
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth() // take full width so it's not centered by parent
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text(
+                text = label,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                color = Color.Black
+            )
+
+            Spacer(Modifier.height(4.dp))
+
+            TextField(
+                value = value,
+                onValueChange = onChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp)),
+                maxLines = maxLines,
+                minLines = minLines,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFFF1F1F3),
+                    unfocusedContainerColor = Color(0xFFF1F1F3),
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
+                ),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Next
+                )
+            )
+
+            Spacer(Modifier.height(18.dp))
+        }
     }
 }
 
 @Composable
-fun SimpleTextField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    singleLine: Boolean = true,
-    maxLines: Int = 1
-) {
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .padding(vertical = 8.dp)) {
-        Text(text = label, color = Color.Gray, fontSize = 12.sp)
-
-        TextField(
-            value = value,
-            onValueChange = onValueChange,
+fun BottomActionBar(onCancel: () -> Unit, onSave: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .padding(16.dp)
+    ) {
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent,
-                focusedIndicatorColor = Color.Black,
-                unfocusedIndicatorColor = Color.LightGray
-            ),
-            singleLine = singleLine,
-            maxLines = maxLines,
-            keyboardOptions = KeyboardOptions.Default.copy(
-                imeAction = ImeAction.Next
-            )
-        )
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            OutlinedButton(
+                onClick = onCancel,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Text("Cancel")
+            }
+
+            Spacer(Modifier.width(16.dp))
+
+            Button(
+                onClick = onSave,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Text("Save")
+            }
+        }
     }
 }

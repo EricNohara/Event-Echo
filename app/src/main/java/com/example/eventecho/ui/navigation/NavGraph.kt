@@ -33,7 +33,7 @@ fun AppNavGraph(navController: NavHostController) {
     NavHost(
         navController = navController,
         // start at the home screen
-        startDestination = Routes.EventMapHome.route
+        startDestination = Routes.SignIn.route
     ) {
         // static routes
         composable (Routes.EventMapHome.route) { EventMapHomeScreen(navController, viewModel) }

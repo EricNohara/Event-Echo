@@ -44,16 +44,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.eventecho.ui.navigation.Routes
 import com.example.eventecho.ui.viewmodels.ProfileViewModel
 
 @Composable
-fun ProfileScreen( navController: NavController, viewModel: ProfileViewModel = viewModel()) {
+fun ProfileScreen(
+    navController: NavController,
+    viewModel: ProfileViewModel = viewModel()
+) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Scaffold(
-        containerColor = Color(0xFFF8F9FA)
-    ) { padding ->
+    Scaffold(containerColor = Color(0xFFF8F9FA)) { padding ->
         if (uiState.isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
@@ -68,12 +70,14 @@ fun ProfileScreen( navController: NavController, viewModel: ProfileViewModel = v
             ) {
                 item {
                     Spacer(modifier = Modifier.height(24.dp))
+
                     ProfileHeader(
-                        name = uiState.user.name,
-                        location = uiState.user.location,
+                        username = uiState.user.username,
                         bio = uiState.user.bio,
+                        profilePicUrl = uiState.user.profilePicUrl,
                         onEditClick = { navController.navigate(Routes.EditProfile.route) }
                     )
+
                     Spacer(modifier = Modifier.height(24.dp))
                 }
 
@@ -91,73 +95,65 @@ fun ProfileScreen( navController: NavController, viewModel: ProfileViewModel = v
                     Spacer(modifier = Modifier.height(24.dp))
                 }
 
-
                 item {
                     SectionTitle("Recent Events")
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                // Recent Events List
                 items(uiState.recentEvents) { event ->
                     RecentEventCard(title = event.title, date = event.date)
                     Spacer(modifier = Modifier.height(12.dp))
                 }
-
             }
         }
     }
 }
 
 @Composable
-fun ProfileHeader(name: String, location: String, bio: String, onEditClick: () -> Unit) {
+fun ProfileHeader(
+    username: String,
+    bio: String,
+    profilePicUrl: String?,
+    onEditClick: () -> Unit
+) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        // user avatar
+
         Box(
             modifier = Modifier
                 .size(100.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFFFD1DC))
-                .border(2.dp, Color.White, CircleShape),
+                .background(Color.LightGray),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.Group,
-                contentDescription = "Avatar",
-                tint = Color(0xFFD81B60),
-                modifier = Modifier.size(50.dp)
-            )
+            if (profilePicUrl != null) {
+                AsyncImage(
+                    model = profilePicUrl,
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier.clip(CircleShape)
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.Group,
+                    contentDescription = null,
+                    tint = Color(0xFFD81B60),
+                    modifier = Modifier.size(60.dp)
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Text(text = name, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Default.LocationOn,
-                contentDescription = null,
-                tint = Color.Gray,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(text = location, color = Color.Gray)
-        }
+        Text(text = username, fontSize = 22.sp, fontWeight = FontWeight.Bold)
 
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = bio, color = Color.Gray)
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row {
-            OutlinedButton(
-                onClick = onEditClick,
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Edit Profile", color = Color.Black)
-            }
+        OutlinedButton(onClick = onEditClick, shape = RoundedCornerShape(8.dp)) {
+            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.width(8.dp))
+            Text("Edit Profile")
         }
     }
 }
