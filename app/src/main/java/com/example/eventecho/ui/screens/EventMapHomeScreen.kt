@@ -1,122 +1,163 @@
 package com.example.eventecho.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Button
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.rememberDrawerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
-import com.example.eventecho.ui.components.DatePicker
-import com.example.eventecho.ui.components.DrawerContent
-import com.example.eventecho.ui.components.DropdownInput
 import com.example.eventecho.ui.components.EventList
-import com.example.eventecho.ui.components.TopBar
+import com.example.eventecho.ui.components.EventMap
+import com.example.eventecho.ui.components.MapSearchBar
 import com.example.eventecho.ui.navigation.Routes
 import com.example.eventecho.ui.viewmodels.EventMapViewModel
-import java.time.LocalDate
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.rememberCameraPositionState
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun EventMapHomeScreen(navController: NavController, viewModel: EventMapViewModel) {
+fun EventMapHomeScreen(
+    navController: NavController,
+    viewModel: EventMapViewModel
+) {
+    val context = LocalContext.current
+
     val events by viewModel.events.collectAsState()
+    val mapPins by viewModel.mapPins.collectAsState()
+    val cameraMoveEvent by viewModel.cameraMoveEvent.collectAsState() // signal to move map to location after search
 
-    // state vars for storing input
-    val radiusState = remember { mutableStateOf(viewModel.radius) }
-    val dropdownOptions = listOf("1", "10", "25", "50")
-    val selectedDateState = remember { mutableStateOf(LocalDate.now()) }
+    // map and gps
+    val cameraPositionState = rememberCameraPositionState()
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    var isLocationPermissionGranted by remember { mutableStateOf(false) }
+    var didInitialCameraCenter by rememberSaveable { mutableStateOf(false) } //so it stays in the searched city when going back a screen
 
-    // fetch new events based off filters when they are changed
-    LaunchedEffect(radiusState.value, selectedDateState.value) {
-        viewModel.radius = radiusState.value
-        viewModel.startDateTime = selectedDateState.value.atStartOfDay(java.time.ZoneOffset.UTC)
-            .format(java.time.format.DateTimeFormatter.ISO_INSTANT)
-        viewModel.fetchEvents()
+
+    LaunchedEffect(cameraMoveEvent) {
+        cameraMoveEvent?.let { target ->
+            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(target, 12f), 1000)
+            viewModel.onCameraMoved() // Reset so we don't move again after config change
+        }
     }
 
-    // content container
-    Box(modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
-        Column {
-            // filter input row
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End,
-                modifier = Modifier.fillMaxWidth()
+    //Fetch event for current area once map stops moving
+    LaunchedEffect(cameraPositionState.isMoving) {
+        if (!cameraPositionState.isMoving) {
+            viewModel.onMapCameraIdle(cameraPositionState.position.target)
+        }
+    }
+
+    val fetchLocation = remember {
+        { forceCameraMove: Boolean ->
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                isLocationPermissionGranted = true
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    if (location != null) {
+
+                        val latLng = LatLng(location.latitude, location.longitude)
+                        viewModel.updateUserLocation(latLng)
+
+                        if (forceCameraMove) {
+                            cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 12f)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { perms ->
+        if (perms[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+            isLocationPermissionGranted = true
+            fetchLocation(true)
+        }
+    }
+
+    // 1st Load
+    LaunchedEffect(Unit) {
+        if (!didInitialCameraCenter) {
+            didInitialCameraCenter = true
+
+            if (ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
             ) {
-                // radius input
-                DropdownInput(
-                    selectedValue = radiusState.value,
-                    label = "Radius",
-                    options = dropdownOptions,
-                    onValueSelected = { newValue ->
-                        radiusState.value = newValue
-                    }
-                )
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                // StartDateTime input
-                DatePicker(
-                    initialDate = selectedDateState.value,
-                    onDateSelected = { date ->
-                        selectedDateState.value = date
-                    }
+                isLocationPermissionGranted = true
+                fetchLocation(true)
+            } else {
+                requestPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
                 )
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // display the list of events
-            EventList(navController, events)
         }
+    }
 
-        // FAB at bottom right for creating new event
-        FloatingActionButton(
-            onClick = {
-                // navigate to create event
-                navController.navigate(Routes.CreateEvent.route)
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Create Event"
-            )
+
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = { navController.navigate(Routes.CreateEvent.route) }) {
+                Icon(Icons.Default.Add, contentDescription = "Create Event")
+            }
+        }
+    ) { padding ->
+        Column(modifier = Modifier.fillMaxSize()) {
+
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                EventMap(
+                    modifier = Modifier.fillMaxSize(),
+                    events = mapPins,
+                    cameraPositionState = cameraPositionState,
+                    isMyLocationEnabled = isLocationPermissionGranted,
+                    onMarkerClick = { pin ->
+                        navController.navigate("event_detail/${pin.id}")
+                    }
+                )
+
+                Box(modifier = Modifier.align(Alignment.TopCenter)) {
+                    MapSearchBar(
+                        onSearch = { query ->
+                            viewModel.performSearch(query, context)
+                        }
+                    )
+                }
+
+                IconButton(
+                    onClick = { fetchLocation(true) },
+                    modifier = Modifier.align(Alignment.TopEnd).padding(top = 100.dp, end = 16.dp)
+                        .background(Color.LightGray, MaterialTheme.shapes.large)
+                ) {
+                    Icon(Icons.Default.MyLocation, contentDescription = "Current Location")
+                }
+            }
+
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                EventList(navController, events)
+            }
         }
     }
 }
+
