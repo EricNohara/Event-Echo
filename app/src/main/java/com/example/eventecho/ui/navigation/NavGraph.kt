@@ -41,12 +41,7 @@ fun AppNavGraph(navController: NavHostController) {
     }
 
     // Create the shared map view model using that repo
-    val viewModel = remember {
-        EventMapViewModel(
-            app = app,
-            repo = repo
-        )
-    }
+    val viewModel = remember { EventMapViewModel(repo) }
 
     NavHost(
         navController = navController,
@@ -78,7 +73,7 @@ fun AppNavGraph(navController: NavHostController) {
             val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
             EventDetailScreen(
                 navController = navController,
-                repo = viewModel.repo,
+                repo = repo,
                 eventId = eventId
             )
         }
