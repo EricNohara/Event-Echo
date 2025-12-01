@@ -51,72 +51,75 @@ import java.time.LocalDate
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun EventMapHomeScreen(navController: NavController, viewModel: EventMapViewModel) {
+fun EventMapHomeScreen(
+    navController: NavController,
+    viewModel: EventMapViewModel
+) {
     val events by viewModel.events.collectAsState()
 
-    // state vars for storing input
+    // Local UI state for filters
     val radiusState = remember { mutableStateOf(viewModel.radius) }
-    val dropdownOptions = listOf("1", "10", "25", "50")
-    val selectedDateState = remember { mutableStateOf(LocalDate.now()) }
+    val dateState = remember { mutableStateOf(viewModel.selectedDate) }
 
-    // fetch new events based off filters when they are changed
-    LaunchedEffect(radiusState.value, selectedDateState.value) {
+    val radiusOptions = listOf(1, 10, 25, 50)
+
+    // 🔄 Whenever radius or date changes → refresh all events
+    LaunchedEffect(radiusState.value, dateState.value) {
         viewModel.radius = radiusState.value
-        viewModel.startDateTime = selectedDateState.value.atStartOfDay(java.time.ZoneOffset.UTC)
-            .format(java.time.format.DateTimeFormatter.ISO_INSTANT)
-        viewModel.fetchEvents()
+        viewModel.selectedDate = dateState.value
+        viewModel.refreshEvents()
     }
 
-    // content container
-    Box(modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
-        Column {
-            // filter input row
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+    ) {
+
+        Column(modifier = Modifier.padding(16.dp)) {
+
+            // ---------- FILTER ROW ----------
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // radius input
+
+                // Radius Dropdown
                 DropdownInput(
-                    selectedValue = radiusState.value,
-                    label = "Radius",
-                    options = dropdownOptions,
+                    selectedValue = radiusState.value.toString(),
+                    label = "Radius (mi)",
+                    options = radiusOptions.map { it.toString() },
                     onValueSelected = { newValue ->
-                        radiusState.value = newValue
+                        radiusState.value = newValue.toInt()
                     }
                 )
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                // StartDateTime input
+                // Date Picker
                 DatePicker(
-                    initialDate = selectedDateState.value,
+                    initialDate = dateState.value,
                     onDateSelected = { date ->
-                        selectedDateState.value = date
+                        dateState.value = date
                     }
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(20.dp))
 
-            // display the list of events
-            EventList(navController, events)
+            // ---------- EVENT LIST ----------
+            EventList(navController = navController, events = events)
         }
 
-        // FAB at bottom right for creating new event
+        // ---------- FAB: ADD EVENT ----------
         FloatingActionButton(
-            onClick = {
-                // navigate to create event
-                navController.navigate(Routes.CreateEvent.route)
-            },
+            onClick = { navController.navigate(Routes.CreateEvent.route) },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Create Event"
-            )
+            Icon(Icons.Default.Add, contentDescription = "Create Event")
         }
     }
 }

@@ -1,57 +1,117 @@
 package com.example.eventecho.ui.viewmodels
 
-import android.os.Build
-import android.util.Log
-import androidx.annotation.RequiresApi
-import androidx.lifecycle.ViewModel
+import android.annotation.SuppressLint
+import android.app.Application
+import android.location.Location
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import ch.hsr.geohash.GeoHash
-import com.example.eventecho.data.api.ticketmaster.EventRepository
-import com.example.eventecho.data.api.ticketmaster.TicketmasterEvent
+import com.example.eventecho.data.firebase.EventRepository
+import com.example.eventecho.ui.dataclass.Event
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.tasks.await
+import java.time.LocalDate
 import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-class EventMapViewModel(private val repo: EventRepository): ViewModel() {
-    private val _events = MutableStateFlow<List<TicketmasterEvent>>(emptyList())
-    val events: StateFlow<List<TicketmasterEvent>> = _events
+class EventMapViewModel(
+    val repo: EventRepository,
+    app: Application
+) : AndroidViewModel(app) {
 
-    // Inputs to the API
-    // default Boston
-    var lat: Double = 42.3555
-    var long: Double = 71.0565
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    var startDateTime: String = ZonedDateTime.now(ZoneOffset.UTC)
-        .withNano(0) // remove milliseconds
-        .format(DateTimeFormatter.ISO_INSTANT)
+    private val _events = MutableStateFlow<List<Event>>(emptyList())
+    val events: StateFlow<List<Event>> = _events
 
-    var radius: String = "50"
-    var page: String = "1"
+    // current user location
+    private var currentLat: Double = 42.3555    // fallback: Boston
+    private var currentLon: Double = -71.0565
 
-    // helper function for calculating geo hashes used as input for the API
-    fun getGeoHash(): String {
-        return GeoHash.withCharacterPrecision(lat, long, 6).toBase32()
+    // filters
+    var radius: Int = 50
+    var selectedDate: LocalDate = LocalDate.now()
+
+    private val fusedLocation = LocationServices.getFusedLocationProviderClient(app)
+
+    init {
+        loadLocationThenEvents()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun fetchEvents() {
+    /** Load GPS → Sync TM → Load Firestore events */
+    private fun loadLocationThenEvents() {
         viewModelScope.launch {
-            try {
-                Log.d("EventMapViewModel", "Fetching events with radius=$radius, start=$startDateTime")
+            getUserLocation()
+            refreshEvents()
+        }
+    }
 
-                // fetch the events for the specified inputs and set it to the events list
-                val geoPoint = getGeoHash()
-                val response = repo.getEvents(geoPoint, startDateTime, radius, page)
-                _events.value = response._embedded?.events ?: emptyList()
-            } catch (e: Exception) {
-                // set events list to empty
-                Log.e("EventMapViewModel", "Error fetching events", e)
-                _events.value = emptyList()
+    /** Refresh = Sync Ticketmaster + Load from Firestore */
+    fun refreshEvents() {
+        viewModelScope.launch {
+            val geoHash = getGeoHash()
+            val startDateTime = selectedDate.atStartOfDay().toInstant(ZoneOffset.UTC)
+                .toString() // ISO-8601
+
+            // 1️⃣ Sync TM events into Firestore
+            repo.syncTicketmasterEvents(
+                geoPoint = geoHash,
+                startDateTime = startDateTime,
+                radius = radius.toString()
+            )
+
+            // 2️⃣ Load all events from Firestore
+            val allEvents = repo.getEventsFromFirestore()
+
+            // 3️⃣ Filter by location + date
+            val filtered = allEvents.filter { event ->
+                isWithinRadius(event.latitude, event.longitude) &&
+                        isOnOrAfterDate(event.date)
             }
+
+            _events.value = filtered
+        }
+    }
+
+    /** Request real device location */
+    @SuppressLint("MissingPermission")
+    private suspend fun getUserLocation() {
+        try {
+            val location: Location? = fusedLocation.lastLocation.await()
+            if (location != null) {
+                currentLat = location.latitude
+                currentLon = location.longitude
+            }
+        } catch (_: Exception) { }
+    }
+
+    /** Convert lat/lon → GeoHash */
+    private fun getGeoHash(): String {
+        return GeoHash.withCharacterPrecision(currentLat, currentLon, 6).toBase32()
+    }
+
+    /** Check if event is within radius */
+    private fun isWithinRadius(eventLat: Double, eventLon: Double): Boolean {
+        val results = FloatArray(1)
+        Location.distanceBetween(
+            currentLat, currentLon,
+            eventLat, eventLon,
+            results
+        )
+        val distanceKm = results[0] / 1000.0
+        return distanceKm <= radius
+    }
+
+    /** Check date filter */
+    private fun isOnOrAfterDate(eventDate: String): Boolean {
+        return try {
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+            val eventLocal = LocalDate.parse(eventDate, formatter)
+            !eventLocal.isBefore(selectedDate)
+        } catch (e: Exception) {
+            true
         }
     }
 }

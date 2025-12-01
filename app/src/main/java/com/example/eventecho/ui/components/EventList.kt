@@ -1,5 +1,6 @@
 package com.example.eventecho.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,46 +15,86 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.navigation.NavController
-import com.example.eventecho.data.api.ticketmaster.TicketmasterEvent
+import coil.compose.AsyncImage
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import com.example.eventecho.ui.dataclass.Event
 
 @Composable
 fun EventList(
     navController: NavController,
-    events: List<TicketmasterEvent>
+    events: List<Event>
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(8.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(12.dp)
     ) {
         items(events) { event ->
-            Card(
+            EventCard(event = event) {
+                navController.navigate("event_detail/${event.id}")
+            }
+        }
+    }
+}
+
+@Composable
+fun EventCard(
+    event: Event,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+
+        Row(
+            modifier = Modifier
+                .padding(12.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            // Image
+            AsyncImage(
+                model = event.imageUrl,
+                contentDescription = null,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        // Navigate to detail screen with event ID
-                        navController.navigate("event_detail/${event.id}")
-                    },
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    .size(72.dp)
+                    .aspectRatio(1f)
+                    .padding(end = 12.dp)
+                    .clip(RoundedCornerShape(10.dp))
+            )
+
+            Column(
+                modifier = Modifier.weight(1f)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp)
-                ) {
-                    Text(
-                        text = event.name,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = event.dates.start.localDate,
-                        fontWeight = FontWeight.Normal
-                    )
-                }
+                Text(
+                    text = event.title,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = event.location,
+                    color = Color.Gray,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Text(
+                    text = event.date,
+                    color = Color.Gray
+                )
             }
         }
     }
