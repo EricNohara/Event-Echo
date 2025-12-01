@@ -6,33 +6,27 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.eventecho.data.firebase.EventRepository
 import com.example.eventecho.data.api.ticketmaster.TicketmasterClient
-import com.example.eventecho.ui.screens.AddToMemoryWallScreen
-import com.example.eventecho.ui.screens.CreateEventScreen
-import com.example.eventecho.ui.screens.EditProfileScreen
-import com.example.eventecho.ui.screens.EventDetailScreen
-import com.example.eventecho.ui.screens.EventMapHomeScreen
-import com.example.eventecho.ui.screens.MapFullScreen
-import com.example.eventecho.ui.screens.MemoryWallScreen
-import com.example.eventecho.ui.screens.ProfileScreen
-import com.example.eventecho.ui.screens.SavedEventsScreen
-import com.example.eventecho.ui.screens.SignInScreen
-import com.example.eventecho.ui.screens.SignUpScreen
-import com.example.eventecho.ui.viewmodels.EventMapViewModel
+import com.example.eventecho.data.firebase.EventRepository
+import com.example.eventecho.data.firebase.UserRepository
+import com.example.eventecho.ui.screens.*
+import com.example.eventecho.ui.viewmodels.*
 import com.google.firebase.firestore.FirebaseFirestore
+import androidx.lifecycle.ViewModelProvider
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavGraph(navController: NavHostController) {
     val app = LocalContext.current.applicationContext as Application
 
-    // Create the repository ONCE
+    // Create 1 shared EventRepository
     val repo = remember {
         EventRepository(
             api = TicketmasterClient.apiService,
@@ -40,25 +34,20 @@ fun AppNavGraph(navController: NavHostController) {
         )
     }
 
-    // Create the shared map view model using that repo
-    val viewModel = remember {
-        EventMapViewModel(
-            app = app,
-            repo = repo
-        )
-    }
+    // Shared Map VM
+    val mapViewModel = remember { EventMapViewModel(repo) }
 
     NavHost(
         navController = navController,
         startDestination = Routes.SignIn.route
     ) {
         composable(Routes.EventMapHome.route) {
-            EventMapHomeScreen(navController, viewModel)
+            EventMapHomeScreen(navController, mapViewModel)
         }
+
         composable(Routes.SignIn.route) { SignInScreen(navController) }
         composable(Routes.SignUp.route) { SignUpScreen(navController) }
 
-        // FIX HERE — now repo exists
         composable(Routes.CreateEvent.route) {
             CreateEventScreen(
                 navController = navController,
@@ -66,19 +55,40 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
 
-        composable(Routes.EditProfile.route) { EditProfileScreen(navController) }
-        composable(Routes.SavedEvents.route) { SavedEventsScreen(navController) }
-        composable(Routes.MapFullScreen.route) { MapFullScreen(navController) }
-        composable(Routes.Profile.route) { ProfileScreen(navController) }
+        composable(Routes.EditProfile.route) {
+            EditProfileScreen(navController)
+        }
+
+        composable(Routes.SavedEvents.route) {
+            SavedEventsScreen(navController)
+        }
+
+        composable(Routes.MapFullScreen.route) {
+            MapFullScreen(navController, mapViewModel)
+        }
+
+        composable(Routes.Profile.route) {
+            val userRepo = UserRepository()
+
+            val vm: ProfileViewModel = viewModel(
+                factory = ProfileViewModelFactory(
+                    userRepo = userRepo,
+                    eventRepo = repo   // <--- USE SHARED REPO HERE
+                )
+            )
+
+            ProfileScreen(navController, vm)
+        }
 
         composable(
             route = Routes.EventDetail.route,
             arguments = listOf(navArgument("eventId") { type = NavType.StringType })
         ) { backStackEntry ->
             val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+
             EventDetailScreen(
                 navController = navController,
-                repo = viewModel.repo,
+                repo = repo,
                 eventId = eventId
             )
         }

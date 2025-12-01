@@ -1,28 +1,28 @@
 package com.example.eventecho.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.eventecho.data.firebase.UserRepository
+import com.example.eventecho.data.firebase.EventRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Locale
-import java.util.Date
 import com.example.eventecho.ui.dataclass.ProfileUser
+import com.example.eventecho.ui.dataclass.Event
+import kotlinx.coroutines.launch
+import androidx.lifecycle.ViewModelProvider
 
 data class ProfileUiState(
     val isLoading: Boolean = true,
     val user: ProfileUser = ProfileUser(),
-    val recentEvents: List<RecentEvent> = emptyList()
-)
-
-data class RecentEvent(
-    val title: String,
-    val date: String
+    val recentEvents: List<Event> = emptyList()
 )
 
 class ProfileViewModel(
-    private val repo: UserRepository = UserRepository()
+    private val userRepo: UserRepository,
+    private val eventRepo: EventRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -33,7 +33,10 @@ class ProfileViewModel(
     }
 
     private fun loadUser() {
-        repo.getUser { data ->
+        userRepo.getUser { data ->
+
+            val recentIds: List<String> =
+                (data["recentEvents"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
 
             val user = ProfileUser(
                 username = data["username"] as? String ?: "",
@@ -47,11 +50,46 @@ class ProfileViewModel(
                 } ?: ""
             )
 
-            _uiState.value = ProfileUiState(
+            _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                user = user,
-                recentEvents = emptyList() // TODO: hook up real events later
+                user = user
             )
+
+            // Load event objects from Firestore
+            loadRecentEvents(recentIds)
         }
+    }
+
+    private fun loadRecentEvents(eventIds: List<String>) {
+        viewModelScope.launch {
+            if (eventIds.isEmpty()) {
+                _uiState.value = _uiState.value.copy(recentEvents = emptyList())
+                return@launch
+            }
+
+            // Fetch each event by its ID
+            val events = eventIds.mapNotNull { id ->
+                try {
+                    eventRepo.getEventById(id)
+                } catch (_: Exception) {
+                    null
+                }
+            }
+
+            _uiState.value = _uiState.value.copy(recentEvents = events)
+        }
+    }
+}
+
+class ProfileViewModelFactory(
+    private val userRepo: UserRepository,
+    private val eventRepo: EventRepository
+) : ViewModelProvider.Factory {
+
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
+            return ProfileViewModel(userRepo, eventRepo) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

@@ -1,117 +1,174 @@
 package com.example.eventecho.ui.viewmodels
 
-import android.annotation.SuppressLint
-import android.app.Application
-import android.location.Location
-import androidx.lifecycle.AndroidViewModel
+import android.content.Context
+import android.location.Geocoder
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ch.hsr.geohash.GeoHash
 import com.example.eventecho.data.firebase.EventRepository
+import com.example.eventecho.ui.components.EventPin
 import com.example.eventecho.ui.dataclass.Event
+import com.google.android.gms.maps.model.LatLng
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import com.google.android.gms.location.LocationServices
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 class EventMapViewModel(
-    val repo: EventRepository,
-    app: Application
-) : AndroidViewModel(app) {
+    private val repo: EventRepository
+) : ViewModel() {
 
-
+    // --- UI State ---
     private val _events = MutableStateFlow<List<Event>>(emptyList())
     val events: StateFlow<List<Event>> = _events
 
-    // current user location
-    private var currentLat: Double = 42.3555    // fallback: Boston
-    private var currentLon: Double = -71.0565
+    private val _mapPins = MutableStateFlow<List<EventPin>>(emptyList())
+    val mapPins: StateFlow<List<EventPin>> = _mapPins
 
-    // filters
-    var radius: Int = 50
+    private val _cameraMoveEvent = MutableStateFlow<LatLng?>(null)
+    val cameraMoveEvent: StateFlow<LatLng?> = _cameraMoveEvent
+
+    private val _userLocation = MutableStateFlow<LatLng?>(null)
+    val userLocation: StateFlow<LatLng?> = _userLocation
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
     var selectedDate: LocalDate = LocalDate.now()
+    var radiusKm: Int = 50
+    private var lastCenter: LatLng? = null
 
-    private val fusedLocation = LocationServices.getFusedLocationProviderClient(app)
 
-    init {
-        loadLocationThenEvents()
-    }
+    // CAMERA IDLE → LOAD FIRESTORE EVENTS
 
-    /** Load GPS → Sync TM → Load Firestore events */
-    private fun loadLocationThenEvents() {
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun onMapCameraIdle(center: LatLng) {
+        lastCenter = center
+
         viewModelScope.launch {
-            getUserLocation()
-            refreshEvents()
+            try {
+                _isLoading.value = true
+                refreshEvents(center)
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 
-    /** Refresh = Sync Ticketmaster + Load from Firestore */
-    fun refreshEvents() {
-        viewModelScope.launch {
-            val geoHash = getGeoHash()
-            val startDateTime = selectedDate.atStartOfDay().toInstant(ZoneOffset.UTC)
-                .toString() // ISO-8601
 
-            // 1️⃣ Sync TM events into Firestore
+    // FULL PIPELINE: Ticketmaster → Firestore → Filter → Pins
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private suspend fun refreshEvents(center: LatLng) {
+        try {
+            // 1. Convert to geohash for Ticketmaster
+            val geoHash = GeoHash.withCharacterPrecision(
+                center.latitude,
+                center.longitude,
+                6
+            ).toBase32()
+
+            // 2. Current time in ISO format
+            val dateIso = ZonedDateTime.now(ZoneOffset.UTC)
+                .withNano(0)
+                .format(DateTimeFormatter.ISO_INSTANT)
+
+            // 3. Sync Ticketmaster → Firestore
             repo.syncTicketmasterEvents(
                 geoPoint = geoHash,
-                startDateTime = startDateTime,
-                radius = radius.toString()
+                startDateTime = dateIso,
+                radius = radiusKm.toString()
             )
 
-            // 2️⃣ Load all events from Firestore
+            // 4. Load all Firestore events
             val allEvents = repo.getEventsFromFirestore()
 
-            // 3️⃣ Filter by location + date
-            val filtered = allEvents.filter { event ->
-                isWithinRadius(event.latitude, event.longitude) &&
-                        isOnOrAfterDate(event.date)
+            // 5. Filter events by radius + date
+            val filtered = allEvents.filter { isEventIncluded(it, center) }
+
+            // 6. Update Compose State
+            _events.value = filtered
+
+            _mapPins.value = filtered.map {
+                EventPin(
+                    id = it.id,
+                    title = it.title,
+                    snippet = it.date,
+                    location = LatLng(it.latitude, it.longitude)
+                )
             }
 
-            _events.value = filtered
+        } catch (e: Exception) {
+            Log.e("EventMapVM", "Error refreshing events", e)
+            _events.value = emptyList()
+            _mapPins.value = emptyList()
         }
     }
 
-    /** Request real device location */
-    @SuppressLint("MissingPermission")
-    private suspend fun getUserLocation() {
-        try {
-            val location: Location? = fusedLocation.lastLocation.await()
-            if (location != null) {
-                currentLat = location.latitude
-                currentLon = location.longitude
-            }
-        } catch (_: Exception) { }
-    }
 
-    /** Convert lat/lon → GeoHash */
-    private fun getGeoHash(): String {
-        return GeoHash.withCharacterPrecision(currentLat, currentLon, 6).toBase32()
-    }
+    // FILTERING HELPER
 
-    /** Check if event is within radius */
-    private fun isWithinRadius(eventLat: Double, eventLon: Double): Boolean {
-        val results = FloatArray(1)
-        Location.distanceBetween(
-            currentLat, currentLon,
-            eventLat, eventLon,
-            results
+    private fun isEventIncluded(event: Event, center: LatLng): Boolean {
+        // Distance filter
+        val dist = FloatArray(1)
+        android.location.Location.distanceBetween(
+            center.latitude, center.longitude,
+            event.latitude, event.longitude,
+            dist
         )
-        val distanceKm = results[0] / 1000.0
-        return distanceKm <= radius
-    }
 
-    /** Check date filter */
-    private fun isOnOrAfterDate(eventDate: String): Boolean {
+        val km = dist[0] / 1000.0
+        if (km > radiusKm) return false
+
+        // Date filter
         return try {
-            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-            val eventLocal = LocalDate.parse(eventDate, formatter)
-            !eventLocal.isBefore(selectedDate)
+            val eventDate = LocalDate.parse(event.date)
+            !eventDate.isBefore(selectedDate)
         } catch (e: Exception) {
             true
         }
+    }
+
+
+    // SEARCH BAR → Geocoder → Move Camera
+
+    fun performSearch(query: String, context: Context) {
+        val trimmed = query.trim()
+        if (trimmed.isBlank()) return
+
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                try {
+                    val geocoder = Geocoder(context)
+                    val results = geocoder.getFromLocationName(trimmed, 1)
+
+                    if (!results.isNullOrEmpty()) {
+                        val loc = results[0]
+                        _cameraMoveEvent.value = LatLng(loc.latitude, loc.longitude)
+                    }
+                } catch (e: Exception) {
+                    Log.e("EventSearch", "Geocoder error", e)
+                }
+            }
+        }
+    }
+
+
+    // GPS & CAMERA MOVEMENT STATE
+
+    fun updateUserLocation(location: LatLng) {
+        _userLocation.value = location
+    }
+
+    fun onCameraMoved() {
+        _cameraMoveEvent.value = null
     }
 }

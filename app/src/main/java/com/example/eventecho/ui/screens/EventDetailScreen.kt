@@ -13,6 +13,7 @@ import com.example.eventecho.ui.dataclass.Event
 import androidx.compose.ui.Alignment
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.text.font.FontWeight
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun EventDetailScreen(
@@ -22,11 +23,16 @@ fun EventDetailScreen(
 ) {
     var event by remember { mutableStateOf<Event?>(null) }
     var isLoading by remember { mutableStateOf(true) }
+    val uid = FirebaseAuth.getInstance().currentUser?.uid
 
     // load from Firestore once for this eventId
     LaunchedEffect(eventId) {
         event = repo.getEventById(eventId)
         isLoading = false
+        // Track recent events
+        if (uid != null) {
+            repo.addRecentEvent(uid, eventId)
+        }
     }
 
     when {

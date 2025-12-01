@@ -1,5 +1,6 @@
 package com.example.eventecho.data.firebase
 
+import android.util.Log
 import com.example.eventecho.data.api.ticketmaster.TicketmasterApi
 import com.example.eventecho.ui.dataclass.Event
 import com.example.eventecho.ui.dataclass.toEvent
@@ -105,4 +106,31 @@ class EventRepository(
 
         id // return event ID
     }
+
+    // used to track user created events
+    suspend fun addEventToUserCreatedList(uid: String, eventId: String) {
+        val userDoc = firestore.collection("users").document(uid)
+
+        userDoc.update("eventsCreated", FieldValue.arrayUnion(eventId))
+            .addOnFailureListener {
+                Log.e("Firestore", "Failed to update eventsCreated", it)
+            }
+    }
+
+    // used to track last 5 viewed events
+    suspend fun addRecentEvent(userId: String, eventId: String) {
+        val userRef = firestore.collection("users").document(userId)
+
+        firestore.runTransaction { transaction ->
+            val snapshot = transaction.get(userRef)
+            val current = snapshot.get("recentEvents") as? List<String> ?: emptyList()
+
+            // Remove if exists, then add to front
+            val updated = (listOf(eventId) + current.filter { it != eventId })
+                .take(5) // keep max 5
+
+            transaction.update(userRef, "recentEvents", updated)
+        }
+    }
+
 }
