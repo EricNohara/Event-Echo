@@ -1,36 +1,15 @@
 package com.example.eventecho.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -42,16 +21,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.eventecho.ui.components.EventCard
 import com.example.eventecho.ui.navigation.Routes
 import com.example.eventecho.ui.viewmodels.ProfileViewModel
 
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    viewModel: ProfileViewModel = viewModel()
+    viewModel: ProfileViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -68,6 +47,8 @@ fun ProfileScreen(
                     .padding(horizontal = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
+                // 1. Header
                 item {
                     Spacer(modifier = Modifier.height(24.dp))
 
@@ -81,11 +62,13 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(24.dp))
                 }
 
+                // 2. Member Since
                 item {
                     MemberSinceFooter(date = uiState.user.memberSince)
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
+                // 3. Stats Row
                 item {
                     StatsRow(
                         attended = uiState.user.eventsAttended,
@@ -95,14 +78,30 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(24.dp))
                 }
 
+                // 4. Section Title
                 item {
                     SectionTitle("Recent Events")
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                 }
 
+                // 5. List of Recent Events
                 items(uiState.recentEvents) { event ->
-                    RecentEventCard(title = event.title, date = event.date)
-                    Spacer(modifier = Modifier.height(12.dp))
+                    EventCard(event = event) {
+                        navController.navigate("event_detail/${event.id}")
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+
+                // if empty
+                if (uiState.recentEvents.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No recent events",
+                            color = Color.Gray,
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(vertical = 16.dp)
+                        )
+                    }
                 }
             }
         }
@@ -142,7 +141,6 @@ fun ProfileHeader(
         }
 
         Spacer(modifier = Modifier.height(12.dp))
-
         Text(text = username, fontSize = 22.sp, fontWeight = FontWeight.Bold)
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -189,7 +187,7 @@ fun StatCard(icon: ImageVector, count: String, label: String) {
             Icon(imageVector = icon, contentDescription = null, tint = Color.Black)
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = count, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Text(text = label, fontSize = 10.sp, color = Color.Gray, lineHeight = 12.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            Text(text = label, fontSize = 10.sp, color = Color.Gray)
         }
     }
 }
@@ -202,36 +200,6 @@ fun MemberSinceFooter(date: String) {
         Text("Member since $date", color = Color.Gray)
     }
 }
-
-// TODO: backend
-@Composable
-fun RecentEventCard(title: String, date: String) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEEEEEE)),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            // TODO: Images 
-            // Placeholder for Event Image
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(Color(0xFFE0E0E0), RoundedCornerShape(8.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Default.Image, contentDescription = null, tint = Color.Gray)
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(text = title, fontWeight = FontWeight.Medium)
-                Text(text = date, color = Color.Gray, fontSize = 14.sp)
-            }
-        }
-    }
-}
-
 
 @Composable
 fun SectionTitle(title: String) {

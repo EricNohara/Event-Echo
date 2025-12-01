@@ -68,6 +68,9 @@ class CreateEventViewModel(
                     createdBy = uid
                 )
 
+                // add event to user's events created array
+                repo.addEventToUserCreatedList(uid, id)
+
                 _ui.value = _ui.value.copy(isLoading = false)
                 onSuccess(id)
 

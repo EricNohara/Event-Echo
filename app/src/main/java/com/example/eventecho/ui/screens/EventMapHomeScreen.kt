@@ -141,7 +141,7 @@ fun EventMapHomeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(350.dp)
+                    .height(300.dp)
             ) {
                 EventMap(
                     cameraPositionState = cameraPositionState,
