@@ -24,7 +24,9 @@ Please find our documentation (Architecture Diagram, Progress Chart, Presentatio
    - [MVP Features](#mvp-features)
    - [Stretch Goals](#stretch-goals)
 7. [APIs & Sensors](#apis--sensors)
-8. [Team Roles & Responsibilities](#team-roles--responsibilities)
+8. [Feature List Progress](#feature-list-status)
+9. [Team Roles & Responsibilities](#team-roles--responsibilities)
+
 
 ---
 
@@ -124,6 +126,24 @@ Event Echo solves these by providing a **shared, location-tied memory wall**.
 
 ---
 
+## Feature List Status
+### Done
+- Google Maps Display
+- Firebase/ Authentication
+- Sign in / Sign Up
+- Ticketmaster API integration
+- GPS Sensor
+- EventMap
+- Event Creation
+- Light/Dark Mode
+
+### In progress
+- Automated testing
+- UI design improvements
+- Memory Wall and Memory Upload
+- Camera Sensor integration
+
+---
 ## Team Roles & Responsibilities
 
 | Role                         | Responsibilities                                                          |
