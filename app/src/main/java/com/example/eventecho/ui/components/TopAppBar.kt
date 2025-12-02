@@ -1,5 +1,6 @@
 package com.example.eventecho.ui.components
 
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.DropdownMenu
@@ -16,7 +17,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.example.eventecho.ui.navigation.Routes
@@ -39,7 +42,8 @@ fun TopBar(navController: NavController) {
                 Icon(
                     Icons.Filled.AccountCircle,
                     contentDescription = "Profile",
-                    tint = MaterialTheme.colorScheme.onPrimary
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(30.dp)
                 )
             }
 

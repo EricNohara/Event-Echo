@@ -22,11 +22,15 @@ fun EventMap(
     isMyLocationEnabled: Boolean = false,
     onMarkerClick: (EventPin) -> Unit = {},
     searchCircle: SearchCircle? = null,
+    onMapLoaded: () -> Unit = {},
 ) {
     GoogleMap(
         modifier = modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,
-        properties = MapProperties(isMyLocationEnabled = isMyLocationEnabled)
+        properties = MapProperties(isMyLocationEnabled = isMyLocationEnabled),
+        onMapLoaded = {
+            onMapLoaded()
+        }
     ) {
 
         searchCircle?.let { circle ->
