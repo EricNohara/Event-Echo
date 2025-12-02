@@ -1,23 +1,19 @@
 package com.example.eventecho.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.eventecho.data.firebase.EventRepository
 import com.example.eventecho.ui.components.EventGrid
-import com.example.eventecho.ui.components.EventGridNonScrollable
 import com.example.eventecho.ui.dataclass.Event
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedEventsScreen(
     navController: NavController,
@@ -46,18 +42,7 @@ fun SavedEventsScreen(
         isLoading = false
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Saved Events") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        }
-    ) { padding ->
+    Scaffold { padding ->
         Box(
             modifier = Modifier
                 .padding(padding)
@@ -67,7 +52,7 @@ fun SavedEventsScreen(
             when {
                 isLoading -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimaryContainer)
                     }
                 }
 
@@ -78,10 +63,24 @@ fun SavedEventsScreen(
                 }
 
                 else -> {
-                    EventGrid(
-                        navController = navController,
-                        events = savedEvents
-                    )
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "Saved Events",
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        EventGrid(
+                            navController = navController,
+                            events = savedEvents
+                        )
+                    }
                 }
             }
         }
