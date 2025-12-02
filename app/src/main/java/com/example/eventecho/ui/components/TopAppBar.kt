@@ -3,6 +3,7 @@ package com.example.eventecho.ui.components
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.West
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,8 +27,21 @@ import com.example.eventecho.ui.navigation.Routes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(navController: NavController) {
+fun TopBar(
+    navController: NavController,
+    currentRoute: String?,
+    onBackClick: () -> Unit)
+{
     var expanded by remember { mutableStateOf(false) }
+
+    // Routes where the back button appears
+    val isBackButtonRoute = currentRoute == Routes.EventDetail.route ||
+            currentRoute == Routes.MemoryWall.route ||
+            currentRoute == Routes.AddToMemoryWall.route ||
+            currentRoute == Routes.SavedEvents.route ||
+            currentRoute == Routes.EditProfile.route ||
+            currentRoute == Routes.CreatedEvents.route ||
+            currentRoute == Routes.AttendedEvents.route
 
     TopAppBar(
         title = {
@@ -37,6 +51,17 @@ fun TopBar(navController: NavController) {
                 color = MaterialTheme.colorScheme.onPrimary
             )
         },
+        navigationIcon = {
+                if (isBackButtonRoute) {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            Icons.Default.West,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+            },
         actions = {
             IconButton(onClick = { expanded = true }) {
                 Icon(

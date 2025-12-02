@@ -142,9 +142,8 @@ fun CreateEventTopBar(onBack: () -> Unit) {
     ) {
         Text(
             "Create Event",
-            fontSize = 18.sp,
+            style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
     }

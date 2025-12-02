@@ -1,6 +1,8 @@
 package com.example.eventecho.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,30 +16,20 @@ import com.example.eventecho.ui.components.EventGrid
 import com.example.eventecho.ui.dataclass.Event
 import com.google.firebase.auth.FirebaseAuth
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SavedEventsScreen(
+fun CreatedEventsScreen(
     navController: NavController,
     repo: EventRepository
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid
-    val scope = rememberCoroutineScope()
-
-    var savedEvents by remember { mutableStateOf<List<Event>>(emptyList()) }
+    var createdEvents by remember { mutableStateOf<List<Event>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // Fetch saved event IDs → fetch each event object
+    // Fetch events created by this user
     LaunchedEffect(uid) {
         if (uid != null) {
-            val savedIds = repo.getUserSavedEvents(uid)
-            val events = mutableListOf<Event>()
-
-            // Fetch each full event
-            for (id in savedIds) {
-                val event = repo.getEventById(id)
-                if (event != null) events.add(event)
-            }
-
-            savedEvents = events
+            createdEvents = repo.getEventsCreatedByUser(uid)
         }
         isLoading = false
     }
@@ -56,7 +48,7 @@ fun SavedEventsScreen(
                     }
                 }
 
-                savedEvents.isEmpty() -> {
+                createdEvents.isEmpty() -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text("You have no saved events.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -69,7 +61,7 @@ fun SavedEventsScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                "Saved Events",
+                                "Created Events",
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center
@@ -78,7 +70,7 @@ fun SavedEventsScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                         EventGrid(
                             navController = navController,
-                            events = savedEvents
+                            events = createdEvents
                         )
                     }
                 }

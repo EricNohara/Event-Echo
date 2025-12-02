@@ -54,7 +54,7 @@ fun EditProfileScreen(
 
     Scaffold(
         topBar = {
-            SimpleTopBar(onBack = { navController.popBackStack() })
+            SimpleTopBar()
         },
         bottomBar = {
             BottomActionBar(
@@ -103,29 +103,26 @@ fun EditProfileScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SimpleTopBar(onBack: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .padding(horizontal = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-        }
-
-        Text(
-            "Edit Profile",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+fun SimpleTopBar() {
+    TopAppBar(
+        title = {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Edit Profile",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.background
         )
-
-        Spacer(modifier = Modifier.width(48.dp)) // keeps title centered
-    }
+    )
 }
 
 @Composable

@@ -9,6 +9,8 @@ sealed class Routes(val route: String) {
     object CreateEvent : Routes("create_event")
     object EditProfile : Routes("edit_profile")
     object SavedEvents : Routes("saved_events")
+    object CreatedEvents : Routes("created_events")
+    object AttendedEvents : Routes("attended_events")
     object MapFullScreen : Routes("map_full_screen")
     object Profile: Routes("profile")
 

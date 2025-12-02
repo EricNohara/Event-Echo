@@ -48,6 +48,13 @@ fun EventMapHomeScreen(
     val cameraPositionState = rememberCameraPositionState()
     var mapLoaded by remember { mutableStateOf(false) }
 
+    LaunchedEffect(mapLoaded) {
+        if (mapLoaded) {
+            val center = cameraPositionState.position.target
+            viewModel.onMapCameraIdle(center)
+        }
+    }
+
     // LOCATION PERMISSIONS
     val fusedLocation = remember { LocationServices.getFusedLocationProviderClient(context) }
     var permissionGranted by remember { mutableStateOf(false) }
@@ -209,7 +216,7 @@ fun EventMapHomeScreen(
                             .background(Color.Black.copy(alpha = 0.35f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primaryContainer)
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimaryContainer)
                     }
                 }
             }

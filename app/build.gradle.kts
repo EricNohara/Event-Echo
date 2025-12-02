@@ -82,6 +82,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(libs.androidx.datastore.preferences)
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
 
     // icons
     implementation("androidx.compose.material:material-icons-extended:1.4.3")

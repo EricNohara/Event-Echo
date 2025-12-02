@@ -1,7 +1,9 @@
 package com.example.eventecho.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -14,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,7 +46,7 @@ fun ProfileScreen(
     Scaffold { padding ->
         if (uiState.isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimaryContainer)
             }
         } else {
             LazyColumn(
@@ -61,13 +64,13 @@ fun ProfileScreen(
                         profilePicUrl = uiState.user.profilePicUrl,
                         onEditClick = { navController.navigate(Routes.EditProfile.route) }
                     )
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(28.dp))
                 }
 
                 // Member Since
                 item {
                     MemberSinceFooter(date = uiState.user.memberSince)
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
 
                 // SETTINGS SECTION (Dark Mode toggle)
@@ -78,7 +81,7 @@ fun ProfileScreen(
                             scope.launch { context.setDarkMode(enabled) }
                         }
                     )
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(28.dp))
                 }
 
                 // Stats
@@ -86,16 +89,18 @@ fun ProfileScreen(
                     StatsRow(
                         attended = uiState.user.eventsAttended,
                         created = uiState.user.eventsCreated,
-                        favorites = uiState.user.favorites
+                        favorites = uiState.user.favorites,
+                        onFavoritesClick = { navController.navigate("saved_events") },
+                        onCreatedClick = { navController.navigate("created_events") }
                     )
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(28.dp))
                 }
 
                 // Recent Events Header
                 // Recent Events Header
                 item {
                     SectionTitle("Recent Events")
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
                 }
 
                 // Recent Events Grid
@@ -112,7 +117,7 @@ fun ProfileScreen(
                             text = "No recent events",
                             color = Color.Gray,
                             fontSize = 14.sp,
-                            modifier = Modifier.padding(vertical = 16.dp)
+                            modifier = Modifier.padding(16.dp)
                         )
                     }
                 }
@@ -126,50 +131,41 @@ fun SettingsSection(
     isDark: Boolean,
     onToggle: (Boolean) -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        modifier = Modifier.fillMaxWidth()
     ) {
+        Column(modifier = Modifier.padding(16.dp)) {
 
-        Text(
-            "Settings",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
+            Text(
+                "Settings",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
 
-            Column {
-                Text(
-                    "Dark Mode",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    "Enable system-wide dark theme",
-                    color = Color.Gray,
-                    fontSize = 12.sp
+                Column {
+                    Text("Dark Mode", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text("Enable app-wide dark theme", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                }
+
+                Switch(
+                    checked = isDark,
+                    onCheckedChange = onToggle
                 )
             }
-
-            Switch(
-                checked = isDark,
-                onCheckedChange = onToggle,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                    uncheckedThumbColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
         }
     }
 }
+
 
 @Composable
 fun ProfileHeader(
@@ -178,13 +174,17 @@ fun ProfileHeader(
     profilePicUrl: String?,
     onEditClick: () -> Unit
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth()
+    ) {
 
+        // Profile picture
         Box(
             modifier = Modifier
-                .size(100.dp)
+                .size(110.dp)
                 .clip(CircleShape)
-                .background(Color.LightGray),
+                .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
             if (profilePicUrl != null) {
@@ -197,63 +197,139 @@ fun ProfileHeader(
                 Icon(
                     imageVector = Icons.Default.Group,
                     contentDescription = null,
-                    tint = Color(0xFFD81B60),
-                    modifier = Modifier.size(60.dp)
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(64.dp)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(text = username, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(12.dp))
 
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = bio, color = Color.Gray)
+        // Username
+        Text(
+            text = username,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold
+        )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(16.dp))
 
-        OutlinedButton(onClick = onEditClick, shape = RoundedCornerShape(8.dp)) {
-            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Edit Profile")
+        // Bio Card
+        Card(
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+        ) {
+            Text(
+                text = if (bio.isNotBlank()) bio else "No bio added.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+
+        Spacer(Modifier.height(20.dp))
+
+        // Edit Button
+        OutlinedButton(
+            onClick = onEditClick,
+            shape = RoundedCornerShape(8.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.onBackground,
+            ),
+            border = ButtonDefaults.outlinedButtonBorder.copy(
+                brush = SolidColor(MaterialTheme.colorScheme.onBackground)
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = "Edit",
+                tint = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                "Edit Profile",
+                color = MaterialTheme.colorScheme.onBackground
+            )
         }
     }
 }
 
 @Composable
-fun StatsRow(attended: Int, created: Int, favorites: Int) {
+fun StatsRow(
+    attended: Int,
+    created: Int,
+    favorites: Int,
+    onFavoritesClick: () -> Unit,
+    onCreatedClick: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        StatCard(icon = Icons.Default.CalendarToday, count = attended.toString(), label = "Events Attended")
-        StatCard(icon = Icons.Default.Group, count = created.toString(), label = "Events Created")
-        StatCard(icon = Icons.Default.FavoriteBorder, count = favorites.toString(), label = "Favorites")
+        StatCard(
+            icon = Icons.Default.CalendarToday,
+            count = attended.toString(),
+            label = "Events Attended"
+        )
+
+        StatCard(
+            icon = Icons.Default.Group,
+            count = created.toString(),
+            label = "Events Created",
+            onClick = onCreatedClick
+        )
+
+        StatCard(
+            icon = Icons.Default.FavoriteBorder,
+            count = favorites.toString(),
+            label = "Favorites",
+            onClick = onFavoritesClick
+        )
     }
 }
 
+
 @Composable
-fun StatCard(icon: ImageVector, count: String, label: String) {
+fun StatCard(
+    icon: ImageVector,
+    count: String,
+    label: String,
+    onClick: (() -> Unit)? = null
+) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier
             .width(105.dp)
             .height(100.dp)
+            .then(
+                if (onClick != null)
+                    Modifier.clickable { onClick() }
+                else
+                    Modifier
+            )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
         ) {
-            Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = count, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Text(text = label, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(icon, contentDescription = null)
+            Spacer(Modifier.height(8.dp))
+            Text(count, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text(label, fontSize = 10.sp)
         }
     }
 }
+
 
 @Composable
 fun MemberSinceFooter(date: String) {
