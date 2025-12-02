@@ -10,16 +10,22 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavController
-import com.example.eventecho.data.api.ticketmaster.TicketmasterEvent
+import coil.compose.AsyncImage
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import com.example.eventecho.R
+import com.example.eventecho.ui.dataclass.Event
 
 @Composable
 fun EventGrid(
     navController: NavController,
-    events: List<TicketmasterEvent>
+    events: List<Event>
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -28,23 +34,29 @@ fun EventGrid(
     ) {
         items(events.chunked(2)) { rowEvents ->
             Row(
-                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Max),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Left card
                 EventCardSmall(
                     event = rowEvents[0],
-                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                     onClick = {
                         navController.navigate("event_detail/${rowEvents[0].id}")
                     }
                 )
 
-                // Right card
+                // Right card (if exists)
                 if (rowEvents.size > 1) {
                     EventCardSmall(
                         event = rowEvents[1],
-                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
                         onClick = {
                             navController.navigate("event_detail/${rowEvents[1].id}")
                         }
@@ -59,7 +71,7 @@ fun EventGrid(
 
 @Composable
 fun EventCardSmall(
-    event: TicketmasterEvent,
+    event: Event,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
@@ -74,58 +86,99 @@ fun EventCardSmall(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(12.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Event name
-            Column {
-                Text(
-                    text = event.name,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 2
-                )
-                Spacer(Modifier.height(6.dp))
-                // Venue
-                event._embedded?.venues?.firstOrNull()?.let { venue ->
-                    Text(
-                        text = venue.name ?: "",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2
-                    )
+
+            // Image
+            val imageModel: Any =
+                if (event.imageUrl.isNullOrBlank()) {
+                    R.drawable.default_image
+                } else {
+                    event.imageUrl
                 }
+
+            AsyncImage(
+                model = imageModel,
+                contentDescription = event.title,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            )
+
+            // Title
+            Text(
+                text = event.title,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(bottom = 4.dp, top = 4.dp)
+            )
+
+            // Location
+            if (!event.location.isNullOrBlank()) {
+                Text(
+                    text = event.location,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray,
+                    maxLines = 1,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
             }
 
-            // Bottom-aligned date row
+            // Date
             Text(
-                text = formatDate(event.dates.start.localDate),
+                text = event.date,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
 }
 
-fun formatDate(input: String): String {
-    return try {
-        // Attempts to convert YYYY-MM-DD to MM/DD/YYYY
-        val parts = input.split("-")
-        if (parts.size != 3) return input
+// non scrollable version for profile page
+@Composable
+fun EventGridNonScrollable(
+    navController: NavController,
+    events: List<Event>
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        events.chunked(2).forEach { rowEvents ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Max),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
 
-        val year = parts[0].toInt()
-        val month = parts[1].toInt()
-        val day = parts[2].toInt()
+                EventCardSmall(
+                    event = rowEvents[0],
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    onClick = {
+                        navController.navigate("event_detail/${rowEvents[0].id}")
+                    }
+                )
 
-        val calendar = java.util.Calendar.getInstance().apply {
-            set(java.util.Calendar.YEAR, year)
-            set(java.util.Calendar.MONTH, month - 1) // Calendar months are 0-based
-            set(java.util.Calendar.DAY_OF_MONTH, day)
+                if (rowEvents.size > 1) {
+                    EventCardSmall(
+                        event = rowEvents[1],
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        onClick = {
+                            navController.navigate("event_detail/${rowEvents[1].id}")
+                        }
+                    )
+                } else {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
         }
-
-        val formatter = java.text.SimpleDateFormat("MM/dd/yyyy", java.util.Locale.US)
-        formatter.format(calendar.time)
-
-    } catch (e: Exception) {
-        input // fallback
     }
 }

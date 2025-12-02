@@ -223,8 +223,8 @@ fun EventMapHomeScreen(
                 onExpandMenu = { filterMenuExpanded = it }
             )
 
-            // EVENT LIST
-            EventList(
+            // EVENT GRID
+            EventGrid(
                 navController = navController,
                 events = filteredEvents
             )

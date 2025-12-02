@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.eventecho.ui.components.EventCard
+import com.example.eventecho.ui.components.EventGridNonScrollable
 import com.example.eventecho.ui.navigation.Routes
 import com.example.eventecho.ui.viewmodels.ProfileViewModel
 import com.example.eventecho.data.datastore.readDarkMode
@@ -53,10 +53,8 @@ fun ProfileScreen(
                     .padding(horizontal = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
                 // Header
                 item {
-                    Spacer(modifier = Modifier.height(24.dp))
                     ProfileHeader(
                         username = uiState.user.username,
                         bio = uiState.user.bio,
@@ -72,17 +70,7 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                // Stats
-                item {
-                    StatsRow(
-                        attended = uiState.user.eventsAttended,
-                        created = uiState.user.eventsCreated,
-                        favorites = uiState.user.favorites
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-
-                // ⚡ NEW: SETTINGS SECTION (Dark Mode toggle)
+                // SETTINGS SECTION (Dark Mode toggle)
                 item {
                     SettingsSection(
                         isDark = isDarkMode,
@@ -93,21 +81,31 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(24.dp))
                 }
 
+                // Stats
+                item {
+                    StatsRow(
+                        attended = uiState.user.eventsAttended,
+                        created = uiState.user.eventsCreated,
+                        favorites = uiState.user.favorites
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+
+                // Recent Events Header
                 // Recent Events Header
                 item {
                     SectionTitle("Recent Events")
                     Spacer(modifier = Modifier.height(10.dp))
                 }
 
-                // Recent Events List
-                items(uiState.recentEvents) { event ->
-                    EventCard(event = event) {
-                        navController.navigate("event_detail/${event.id}")
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
+                // Recent Events Grid
+                item {
+                    EventGridNonScrollable(
+                        navController = navController,
+                        events = uiState.recentEvents
+                    )
                 }
 
-                // Empty state
                 if (uiState.recentEvents.isEmpty()) {
                     item {
                         Text(
