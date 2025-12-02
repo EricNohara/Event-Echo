@@ -43,7 +43,7 @@ fun ProfileScreen(
     Scaffold { padding ->
         if (uiState.isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimaryContainer)
             }
         } else {
             LazyColumn(

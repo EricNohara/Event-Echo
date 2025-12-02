@@ -133,4 +133,19 @@ class EventRepository(
         }
     }
 
+    // favorite events
+    suspend fun addFavoriteEvent(uid: String, eventId: String) {
+        val userRef = firestore.collection("users").document(uid)
+        userRef.update("savedEvents", FieldValue.arrayUnion(eventId))
+    }
+
+    suspend fun removeFavoriteEvent(uid: String, eventId: String) {
+        val userRef = firestore.collection("users").document(uid)
+        userRef.update("savedEvents", FieldValue.arrayRemove(eventId))
+    }
+
+    suspend fun getUserSavedEvents(uid: String): List<String> {
+        val doc = firestore.collection("users").document(uid).get().await()
+        return doc.get("savedEvents") as? List<String> ?: emptyList()
+    }
 }

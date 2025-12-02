@@ -166,7 +166,7 @@ fun MapFullScreen(
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                     strokeWidth = 4.dp
                 )
             }
