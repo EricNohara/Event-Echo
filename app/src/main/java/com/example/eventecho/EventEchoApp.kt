@@ -2,7 +2,6 @@ package com.example.eventecho
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -21,47 +20,62 @@ import com.example.eventecho.ui.navigation.AppNavGraph
 import com.example.eventecho.ui.navigation.Routes
 import com.example.eventecho.ui.theme.EventEchoTheme
 import com.example.eventecho.data.datastore.readDarkMode
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import androidx.compose.runtime.SideEffect
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EventEchoApp() {
     val navController = rememberNavController()
-
-    // current route
     val navBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry.value?.destination?.route
 
-    //Screens in which we want a bottomBar to be shown
     val hideBottomBar = currentRoute in listOf(
         Routes.SignIn.route,
         Routes.SignUp.route
     )
-
     val showBottomBar = !hideBottomBar
 
-    // Determine Light/Dark mode
     val context = LocalContext.current
     val isDarkMode by context.readDarkMode().collectAsState(initial = false)
 
-    EventEchoTheme (
-        darkTheme = isDarkMode
-    ) {
+    val systemUiController = rememberSystemUiController()
+
+    EventEchoTheme(darkTheme = isDarkMode) {
+
+        val bgColor = MaterialTheme.colorScheme.background
+
+        SideEffect {
+            systemUiController.setStatusBarColor(
+                color = bgColor,
+                darkIcons = false
+            )
+            systemUiController.setNavigationBarColor(
+                color = bgColor,
+                darkIcons = false
+            )
+        }
+
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            topBar = { TopBar(navController, currentRoute, onBackClick = { navController.popBackStack() }) },
-            bottomBar = {
-                if (showBottomBar) {
-                    BottomBar(navController)
-                }
+            topBar = {
+                TopBar(
+                    navController = navController,
+                    currentRoute = currentRoute,
+                    onBackClick = { navController.popBackStack() }
+                )
             },
-            containerColor = MaterialTheme.colorScheme.background
+            bottomBar = {
+                if (showBottomBar) BottomBar(navController)
+            },
+            containerColor = bgColor
         ) { innerPadding ->
 
             Surface(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
-                color = MaterialTheme.colorScheme.background
+                color = bgColor
             ) {
                 AppNavGraph(navController)
             }
