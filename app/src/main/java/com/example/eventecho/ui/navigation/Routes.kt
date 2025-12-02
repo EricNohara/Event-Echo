@@ -11,6 +11,8 @@ sealed class Routes(val route: String) {
     object SavedEvents : Routes("saved_events")
     object MapFullScreen : Routes("map_full_screen")
 
+    object Settings : Routes("settings_screen")
+
     // dynamic routes
     object EventDetail : Routes("event_detail/{eventId}") {
         fun createRoute(eventId: String) = "event_detail/$eventId"

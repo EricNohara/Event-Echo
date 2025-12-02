@@ -21,6 +21,7 @@ import com.example.eventecho.ui.screens.MemoryWallScreen
 import com.example.eventecho.ui.screens.SavedEventsScreen
 import com.example.eventecho.ui.screens.SignInScreen
 import com.example.eventecho.ui.screens.SignUpScreen
+import com.example.eventecho.ui.screens.SettingsScreen
 import com.example.eventecho.ui.viewmodels.EventMapViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -42,6 +43,7 @@ fun AppNavGraph(navController: NavHostController) {
         composable(Routes.EditProfile.route) { EditProfileScreen(navController) }
         composable(Routes.SavedEvents.route) { SavedEventsScreen(navController) }
         composable(Routes.MapFullScreen.route) { MapFullScreen(navController) }
+        composable(Routes.Settings.route) { SettingsScreen(navController) }
 
         // dynamic routes
         composable(
