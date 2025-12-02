@@ -46,6 +46,12 @@ class EventMapViewModel(
     var radiusKm: Int = 50
     private var lastCenter: LatLng? = null
 
+    var radius: Int
+        get() = radiusKm
+        set(value) { radiusKm = value }
+
+    var startDateTime: String = ""
+
 
     // CAMERA IDLE → LOAD FIRESTORE EVENTS
 

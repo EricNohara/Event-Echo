@@ -17,13 +17,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -76,8 +76,7 @@ fun CreateEventScreen(
                     )
                 }
             )
-        },
-        containerColor = Color(0xFFF8F9FA)
+        }
     ) { padding ->
 
         Column(
@@ -159,7 +158,7 @@ fun EventImagePicker(imageUri: Uri?, isLoading: Boolean, onClick: () -> Unit) {
             modifier = Modifier
                 .size(140.dp)
                 .clip(CircleShape)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.surface)
                 .clickable { onClick() },
             contentAlignment = Alignment.Center
         ) {
@@ -185,7 +184,7 @@ fun EventImagePicker(imageUri: Uri?, isLoading: Boolean, onClick: () -> Unit) {
                 .size(38.dp)
                 .align(Alignment.BottomEnd)
                 .clip(CircleShape)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.surface)
                 .clickable(onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
@@ -195,7 +194,7 @@ fun EventImagePicker(imageUri: Uri?, isLoading: Boolean, onClick: () -> Unit) {
 
     Spacer(Modifier.height(12.dp))
 
-    Text("Tap image to select an event photo", fontSize = 13.sp, color = Color.Gray)
+    Text("Tap image to select an event photo", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 @Composable
@@ -223,16 +222,17 @@ fun EventInputField(
             onValueChange = onChange,
             modifier = Modifier
                 .fillMaxWidth()
+                .shadow(6.dp, RoundedCornerShape(16.dp))
                 .clip(RoundedCornerShape(12.dp)),
             minLines = minLines,
             maxLines = maxLines,
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color(0xFFF1F1F3),
-                unfocusedContainerColor = Color(0xFFF1F1F3),
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent
             ),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
         )
 
         Spacer(Modifier.height(18.dp))
@@ -248,7 +248,6 @@ fun CreateEventBottomBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
             .padding(16.dp)
     ) {
         Row(
@@ -258,7 +257,10 @@ fun CreateEventBottomBar(
             OutlinedButton(
                 onClick = onCancel,
                 modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(10.dp)
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             ) {
                 Text("Cancel")
             }

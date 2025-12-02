@@ -3,29 +3,30 @@ package com.example.eventecho.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.eventecho.ui.components.EventCard
+import com.example.eventecho.ui.components.EventGridNonScrollable
 import com.example.eventecho.ui.navigation.Routes
 import com.example.eventecho.ui.viewmodels.ProfileViewModel
+import com.example.eventecho.data.datastore.readDarkMode
+import com.example.eventecho.data.datastore.setDarkMode
+import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun ProfileScreen(
@@ -33,8 +34,13 @@ fun ProfileScreen(
     viewModel: ProfileViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
-    Scaffold(containerColor = Color(0xFFF8F9FA)) { padding ->
+    // READ DARK MODE FROM DATASTORE
+    val isDarkMode by context.readDarkMode().collectAsState(initial = false)
+
+    Scaffold { padding ->
         if (uiState.isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
@@ -47,28 +53,35 @@ fun ProfileScreen(
                     .padding(horizontal = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
-                // 1. Header
+                // Header
                 item {
-                    Spacer(modifier = Modifier.height(24.dp))
-
                     ProfileHeader(
                         username = uiState.user.username,
                         bio = uiState.user.bio,
                         profilePicUrl = uiState.user.profilePicUrl,
                         onEditClick = { navController.navigate(Routes.EditProfile.route) }
                     )
-
                     Spacer(modifier = Modifier.height(24.dp))
                 }
 
-                // 2. Member Since
+                // Member Since
                 item {
                     MemberSinceFooter(date = uiState.user.memberSince)
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                // 3. Stats Row
+                // SETTINGS SECTION (Dark Mode toggle)
+                item {
+                    SettingsSection(
+                        isDark = isDarkMode,
+                        onToggle = { enabled ->
+                            scope.launch { context.setDarkMode(enabled) }
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+
+                // Stats
                 item {
                     StatsRow(
                         attended = uiState.user.eventsAttended,
@@ -78,21 +91,21 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(24.dp))
                 }
 
-                // 4. Section Title
+                // Recent Events Header
+                // Recent Events Header
                 item {
                     SectionTitle("Recent Events")
                     Spacer(modifier = Modifier.height(10.dp))
                 }
 
-                // 5. List of Recent Events
-                items(uiState.recentEvents) { event ->
-                    EventCard(event = event) {
-                        navController.navigate("event_detail/${event.id}")
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
+                // Recent Events Grid
+                item {
+                    EventGridNonScrollable(
+                        navController = navController,
+                        events = uiState.recentEvents
+                    )
                 }
 
-                // if empty
                 if (uiState.recentEvents.isEmpty()) {
                     item {
                         Text(
@@ -104,6 +117,56 @@ fun ProfileScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun SettingsSection(
+    isDark: Boolean,
+    onToggle: (Boolean) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+
+        Text(
+            "Settings",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+
+            Column {
+                Text(
+                    "Dark Mode",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    "Enable system-wide dark theme",
+                    color = Color.Gray,
+                    fontSize = 12.sp
+                )
+            }
+
+            Switch(
+                checked = isDark,
+                onCheckedChange = onToggle,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                    uncheckedThumbColor = MaterialTheme.colorScheme.onPrimary
+                )
+            )
         }
     }
 }
@@ -171,7 +234,7 @@ fun StatsRow(attended: Int, created: Int, favorites: Int) {
 @Composable
 fun StatCard(icon: ImageVector, count: String, label: String) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier
             .width(105.dp)
@@ -184,10 +247,10 @@ fun StatCard(icon: ImageVector, count: String, label: String) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(imageVector = icon, contentDescription = null, tint = Color.Black)
+            Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = count, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Text(text = label, fontSize = 10.sp, color = Color.Gray)
+            Text(text = label, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

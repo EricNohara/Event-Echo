@@ -117,7 +117,7 @@ class EventRepository(
             }
     }
 
-    // used to track last 5 viewed events
+    // used to track last 10 viewed events
     suspend fun addRecentEvent(userId: String, eventId: String) {
         val userRef = firestore.collection("users").document(userId)
 
@@ -127,7 +127,7 @@ class EventRepository(
 
             // Remove if exists, then add to front
             val updated = (listOf(eventId) + current.filter { it != eventId })
-                .take(5) // keep max 5
+                .take(10) // keep max 10
 
             transaction.update(userRef, "recentEvents", updated)
         }

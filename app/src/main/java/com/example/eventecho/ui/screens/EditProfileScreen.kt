@@ -64,8 +64,7 @@ fun EditProfileScreen(
                     navController.popBackStack()
                 }
             )
-        },
-        containerColor = Color(0xFFF8F9FA)
+        }
     ) { padding ->
 
         Column(
@@ -137,7 +136,7 @@ fun AvatarSection(profilePicUrl: String?, uploading: Boolean, onClick: () -> Uni
             modifier = Modifier
                 .size(120.dp)
                 .clip(CircleShape)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.surface)
                 .clickable { onClick() },
             contentAlignment = Alignment.Center
         ) {
@@ -163,7 +162,7 @@ fun AvatarSection(profilePicUrl: String?, uploading: Boolean, onClick: () -> Uni
                 .size(38.dp)
                 .align(Alignment.BottomEnd)
                 .clip(CircleShape)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.surface)
                 .clickable(onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
@@ -173,7 +172,7 @@ fun AvatarSection(profilePicUrl: String?, uploading: Boolean, onClick: () -> Uni
 
     Spacer(Modifier.height(12.dp))
 
-    Text("Click the camera icon to change avatar", fontSize = 13.sp, color = Color.Gray)
+    Text("Click the camera icon to change avatar", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 @Composable
@@ -196,7 +195,7 @@ fun ProfileInput(
                 text = label,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(Modifier.height(4.dp))
@@ -210,8 +209,8 @@ fun ProfileInput(
                 maxLines = maxLines,
                 minLines = minLines,
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFF1F1F3),
-                    unfocusedContainerColor = Color(0xFFF1F1F3),
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
                 ),
@@ -230,7 +229,6 @@ fun BottomActionBar(onCancel: () -> Unit, onSave: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
             .padding(16.dp)
     ) {
         Row(
