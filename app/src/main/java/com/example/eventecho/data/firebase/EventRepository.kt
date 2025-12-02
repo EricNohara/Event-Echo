@@ -24,6 +24,8 @@ class EventRepository(
         page: String = "1"
     ) = withContext(Dispatchers.IO) {
 
+        Log.d("EventRepository", "Syncing Ticketmaster events: geo=$geoPoint start=$startDateTime radius=$radius page=$page")
+
         val response = api.getEventsNearby(
             geoPoint = geoPoint,
             startDateTime = startDateTime,
@@ -32,6 +34,8 @@ class EventRepository(
         )
 
         val tmEvents = response._embedded?.events ?: emptyList()
+
+        Log.d("EventRepository", "Ticketmaster returned ${tmEvents.size} events")
 
         tmEvents.forEach { tmEvent ->
             val venue = tmEvent._embedded?.venues?.firstOrNull()
@@ -55,20 +59,41 @@ class EventRepository(
                 "updatedAt" to FieldValue.serverTimestamp()
             )
 
+            Log.v("EventRepository", "Writing event ${tmEvent.id} to Firestore")
+
             firestore.collection("events")
                 .document(tmEvent.id) // avoid duplicates
                 .set(eventDoc, SetOptions.merge())
+                .addOnSuccessListener {
+                    Log.v("EventRepository", "Successfully wrote event ${tmEvent.id}")
+                }
+                .addOnFailureListener { e ->
+                    Log.e("EventRepository", "Failed writing event ${tmEvent.id}", e)
+                }
         }
     }
 
     /** Read all events from Firestore */
     suspend fun getEventsFromFirestore(): List<Event> = withContext(Dispatchers.IO) {
+        Log.d("EventRepository", "Fetching ALL events from Firestore")
         val snap = firestore.collection("events").get().await()
+
+        Log.d("EventRepository", "Firestore returned ${snap.size()} events")
         snap.documents.map { it.toEvent() }
     }
 
     suspend fun getEventById(id: String): Event? = withContext(Dispatchers.IO) {
+        Log.d("EventRepository", "Fetching event by ID: $id")
         val doc = firestore.collection("events").document(id).get().await()
+
+        if (doc.exists()) {
+            Log.d("EventRepository", "Event $id FOUND")
+            doc.toEvent()
+        } else {
+            Log.d("EventRepository", "Event $id NOT FOUND")
+            null
+        }
+
         return@withContext if (doc.exists()) doc.toEvent() else null
     }
 
@@ -84,6 +109,7 @@ class EventRepository(
     ) = withContext(Dispatchers.IO) {
 
         val id = firestore.collection("events").document().id
+        Log.d("EventRepository", "Creating user event id=$id title=$title ($latitude,$longitude)")
 
         val eventDoc = mapOf(
             "id" to id,
@@ -103,12 +129,19 @@ class EventRepository(
         firestore.collection("events")
             .document(id)
             .set(eventDoc, SetOptions.merge())
+            .addOnSuccessListener {
+                Log.d("EventRepository", "User event $id successfully created")
+            }
+            .addOnFailureListener {
+                Log.e("EventRepository", "Failed to create user event $id", it)
+            }
 
         id // return event ID
     }
 
     // used to track user created events
     suspend fun addEventToUserCreatedList(uid: String, eventId: String) {
+        Log.d("EventRepository", "Adding event $eventId to userCreated list for $uid")
         val userDoc = firestore.collection("users").document(uid)
 
         userDoc.update("eventsCreated", FieldValue.arrayUnion(eventId))
@@ -119,6 +152,7 @@ class EventRepository(
 
     // used to track last 10 viewed events
     suspend fun addRecentEvent(userId: String, eventId: String) {
+        Log.d("EventRepository", "Running transaction: add recent event $eventId for user=$userId")
         val userRef = firestore.collection("users").document(userId)
 
         firestore.runTransaction { transaction ->
@@ -130,32 +164,41 @@ class EventRepository(
                 .take(10) // keep max 10
 
             transaction.update(userRef, "recentEvents", updated)
+            Log.d("EventRepository", "Transaction: recent events updated for $userId")
         }
     }
 
     // favorite events
     suspend fun addFavoriteEvent(uid: String, eventId: String) {
+        Log.d("EventRepository", "Adding favorite event $eventId for $uid")
         val userRef = firestore.collection("users").document(uid)
         userRef.update("savedEvents", FieldValue.arrayUnion(eventId))
     }
 
     suspend fun removeFavoriteEvent(uid: String, eventId: String) {
+        Log.d("EventRepository", "Removing favorite event $eventId for $uid")
         val userRef = firestore.collection("users").document(uid)
         userRef.update("savedEvents", FieldValue.arrayRemove(eventId))
     }
 
     suspend fun getUserSavedEvents(uid: String): List<String> {
+        Log.d("EventRepository", "Fetching saved events for $uid")
         val doc = firestore.collection("users").document(uid).get().await()
+
+        val saved = doc.get("savedEvents") as? List<String> ?: emptyList()
+        Log.d("EventRepository", "User $uid has ${saved.size} saved events")
+
         return doc.get("savedEvents") as? List<String> ?: emptyList()
     }
 
     // user created events
     suspend fun getEventsCreatedByUser(uid: String): List<Event> {
+        Log.d("EventRepository", "Fetching user-created events for $uid")
         val snapshot = firestore.collection("events")
             .whereEqualTo("createdBy", uid)
             .get()
             .await()
-
+        Log.d("EventRepository", "User $uid has ${snapshot.size()} created events")
         return snapshot.documents.mapNotNull { it.toObject(Event::class.java)?.copy(id = it.id) }
     }
 }

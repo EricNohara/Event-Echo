@@ -21,6 +21,8 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 
 @Composable
 fun BottomBar(navController: NavController) {
@@ -44,6 +46,7 @@ fun BottomBar(navController: NavController) {
 
         // EVENTS
         NavigationBarItem(
+            modifier = Modifier.testTag("bottomNavHome"),
             selected = currentRoute == Routes.EventMapHome.route,
             onClick = { navController.navigate(Routes.EventMapHome.route) },
             icon = {
@@ -59,6 +62,7 @@ fun BottomBar(navController: NavController) {
 
         // MAP
         NavigationBarItem(
+            modifier = Modifier.testTag("bottomNavMap"),
             selected = currentRoute == Routes.MapFullScreen.route,
             onClick = { navController.navigate(Routes.MapFullScreen.route) },
             icon = {
@@ -74,6 +78,7 @@ fun BottomBar(navController: NavController) {
 
         // CREATE
         NavigationBarItem(
+            modifier = Modifier.testTag("bottomNavCreate"),
             selected = currentRoute == Routes.CreateEvent.route,
             onClick = { navController.navigate(Routes.CreateEvent.route) },
             icon = {
@@ -89,6 +94,7 @@ fun BottomBar(navController: NavController) {
 
         // PROFILE
         NavigationBarItem(
+            modifier = Modifier.testTag("bottomNavProfile"),
             selected = currentRoute == Routes.Profile.route,
             onClick = { navController.navigate(Routes.Profile.route) },
             icon = {
