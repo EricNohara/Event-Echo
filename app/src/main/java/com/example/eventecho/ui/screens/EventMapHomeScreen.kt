@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -196,7 +197,7 @@ fun EventMapHomeScreen(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(top = 90.dp, end = 16.dp)
-                        .background(Color.White, MaterialTheme.shapes.medium)
+                        .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.medium)
                 ) {
                     Icon(Icons.Default.MyLocation, "Current Location")
                 }
@@ -208,7 +209,7 @@ fun EventMapHomeScreen(
                             .background(Color.Black.copy(alpha = 0.35f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = Color.White)
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primaryContainer)
                     }
                 }
             }
@@ -255,16 +256,26 @@ fun FilterRow(
             TextField(
                 value = searchQuery.value,
                 onValueChange = { searchQuery.value = it },
-                placeholder = { Text("Search events…") },
+                placeholder = { Text("Search events") },
                 modifier = Modifier
                     .weight(1f)
                     .height(52.dp),
                 singleLine = true,
                 shape = RoundedCornerShape(20),
                 colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                     focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                )
+                    unfocusedIndicatorColor = Color.Transparent,
+                ),
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             )
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -283,17 +294,25 @@ fun FilterRow(
 
                 DropdownMenu(
                     expanded = filterMenuExpanded,
-                    onDismissRequest = { onExpandMenu(false) }
+                    onDismissRequest = { onExpandMenu(false) },
+                    modifier = Modifier.background(MaterialTheme.colorScheme.tertiary).padding(16.dp),
                 ) {
 
                     // Radius
-                    Text("Radius: ${radiusState.value} miles", Modifier.padding(12.dp))
+                    Text("Radius: ${radiusState.value} miles")
 
                     Slider(
                         value = radiusState.value.toFloat(),
                         onValueChange = { radiusState.value = it.toInt() },
                         valueRange = 1f..100f,
-                        steps = 99
+                        steps = 99,
+                        colors = SliderDefaults.colors(
+                            thumbColor = MaterialTheme.colorScheme.onTertiary,
+                            activeTrackColor = MaterialTheme.colorScheme.onTertiary,
+                            inactiveTrackColor = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.3f),
+                            activeTickColor = MaterialTheme.colorScheme.onTertiary,
+                            inactiveTickColor = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.2f)
+                        )
                     )
 
                     Spacer(Modifier.height(12.dp))
