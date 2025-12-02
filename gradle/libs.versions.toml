@@ -13,6 +13,9 @@ material3 = "1.4.0"
 runtime = "1.9.4"
 uiGraphics = "1.9.5"
 datastorePreferences = "1.1.4"
+navigationTesting = "2.9.6"
+uiTestJunit4 = "1.9.5"
+rules = "1.7.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -35,6 +38,9 @@ androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime
 maps-compose = { module = "com.google.maps.android:maps-compose", version = "6.12.1" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics", version.ref = "uiGraphics" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
+androidx-navigation-testing = { group = "androidx.navigation", name = "navigation-testing", version.ref = "navigationTesting" }
+androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "uiTestJunit4" }
+androidx-rules = { group = "androidx.test", name = "rules", version.ref = "rules" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
