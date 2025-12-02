@@ -63,13 +63,13 @@ fun ProfileScreen(
                         profilePicUrl = uiState.user.profilePicUrl,
                         onEditClick = { navController.navigate(Routes.EditProfile.route) }
                     )
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(28.dp))
                 }
 
                 // Member Since
                 item {
                     MemberSinceFooter(date = uiState.user.memberSince)
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
 
                 // SETTINGS SECTION (Dark Mode toggle)
@@ -80,7 +80,7 @@ fun ProfileScreen(
                             scope.launch { context.setDarkMode(enabled) }
                         }
                     )
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(28.dp))
                 }
 
                 // Stats
@@ -93,14 +93,14 @@ fun ProfileScreen(
                             navController.navigate("saved_events")
                         }
                     )
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(28.dp))
                 }
 
                 // Recent Events Header
                 // Recent Events Header
                 item {
                     SectionTitle("Recent Events")
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
                 }
 
                 // Recent Events Grid
@@ -117,7 +117,7 @@ fun ProfileScreen(
                             text = "No recent events",
                             color = Color.Gray,
                             fontSize = 14.sp,
-                            modifier = Modifier.padding(vertical = 16.dp)
+                            modifier = Modifier.padding(16.dp)
                         )
                     }
                 }
@@ -131,50 +131,41 @@ fun SettingsSection(
     isDark: Boolean,
     onToggle: (Boolean) -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        modifier = Modifier.fillMaxWidth()
     ) {
+        Column(modifier = Modifier.padding(16.dp)) {
 
-        Text(
-            "Settings",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
+            Text(
+                "Settings",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
 
-            Column {
-                Text(
-                    "Dark Mode",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    "Enable system-wide dark theme",
-                    color = Color.Gray,
-                    fontSize = 12.sp
+                Column {
+                    Text("Dark Mode", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text("Enable app-wide dark theme", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                }
+
+                Switch(
+                    checked = isDark,
+                    onCheckedChange = onToggle
                 )
             }
-
-            Switch(
-                checked = isDark,
-                onCheckedChange = onToggle,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                    uncheckedThumbColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
         }
     }
 }
+
 
 @Composable
 fun ProfileHeader(
@@ -183,13 +174,17 @@ fun ProfileHeader(
     profilePicUrl: String?,
     onEditClick: () -> Unit
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth()
+    ) {
 
+        // Profile picture
         Box(
             modifier = Modifier
-                .size(100.dp)
+                .size(110.dp)
                 .clip(CircleShape)
-                .background(Color.LightGray),
+                .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
             if (profilePicUrl != null) {
@@ -202,23 +197,50 @@ fun ProfileHeader(
                 Icon(
                     imageVector = Icons.Default.Group,
                     contentDescription = null,
-                    tint = Color(0xFFD81B60),
-                    modifier = Modifier.size(60.dp)
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(64.dp)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(text = username, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(12.dp))
 
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = bio, color = Color.Gray)
+        // Username
+        Text(
+            text = username,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold
+        )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(16.dp))
 
-        OutlinedButton(onClick = onEditClick, shape = RoundedCornerShape(8.dp)) {
-            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
-            Spacer(modifier = Modifier.width(8.dp))
+        // Bio Card
+        Card(
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+        ) {
+            Text(
+                text = if (bio.isNotBlank()) bio else "No bio added.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+
+        Spacer(Modifier.height(20.dp))
+
+        // Edit Button
+        OutlinedButton(
+            onClick = onEditClick,
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(8.dp))
             Text("Edit Profile")
         }
     }
