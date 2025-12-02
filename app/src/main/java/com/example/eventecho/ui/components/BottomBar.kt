@@ -19,71 +19,88 @@ import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBarItemDefaults
 
 @Composable
 fun BottomBar(navController: NavController) {
-    NavigationBar(containerColor = Color.White) {
 
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.primary
+    ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 
-        // ---- EVENTS ----
-        val eventsSelected = currentRoute == Routes.EventMapHome.route
+        val selectedColor = MaterialTheme.colorScheme.onPrimaryContainer
+        val unselectedColor = MaterialTheme.colorScheme.onPrimary
+
+        val itemColors = NavigationBarItemDefaults.colors(
+            selectedIconColor = selectedColor,
+            selectedTextColor = selectedColor,
+            unselectedIconColor = unselectedColor,
+            unselectedTextColor = unselectedColor,
+            indicatorColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f)
+        )
+
+        // EVENTS
         NavigationBarItem(
+            selected = currentRoute == Routes.EventMapHome.route,
+            onClick = { navController.navigate(Routes.EventMapHome.route) },
             icon = {
                 Icon(
-                    imageVector = if (eventsSelected) Icons.Filled.Search else Icons.Outlined.Search,
+                    imageVector = if (currentRoute == Routes.EventMapHome.route)
+                        Icons.Filled.Search else Icons.Outlined.Search,
                     contentDescription = "Events"
                 )
             },
             label = { Text("Events") },
-            selected = eventsSelected,
-            onClick = { navController.navigate(Routes.EventMapHome.route) }
+            colors = itemColors
         )
 
-        // ---- MAP ----
-        val mapSelected = currentRoute == Routes.MapFullScreen.route
+        // MAP
         NavigationBarItem(
+            selected = currentRoute == Routes.MapFullScreen.route,
+            onClick = { navController.navigate(Routes.MapFullScreen.route) },
             icon = {
                 Icon(
-                    imageVector = if (mapSelected) Icons.Filled.Map else Icons.Outlined.Map,
+                    imageVector = if (currentRoute == Routes.MapFullScreen.route)
+                        Icons.Filled.Map else Icons.Outlined.Map,
                     contentDescription = "Map"
                 )
             },
             label = { Text("Map") },
-            selected = mapSelected,
-            onClick = { navController.navigate(Routes.MapFullScreen.route) }
+            colors = itemColors
         )
 
-        // ---- CREATE ----
-        val createSelected = currentRoute == Routes.CreateEvent.route
+        // CREATE
         NavigationBarItem(
+            selected = currentRoute == Routes.CreateEvent.route,
+            onClick = { navController.navigate(Routes.CreateEvent.route) },
             icon = {
                 Icon(
-                    imageVector = if (createSelected)
-                        Icons.Filled.AddCircle
-                    else
-                        Icons.Outlined.AddCircleOutline,   // <-- correct outlined match
+                    imageVector = if (currentRoute == Routes.CreateEvent.route)
+                        Icons.Filled.AddCircle else Icons.Outlined.AddCircleOutline,
                     contentDescription = "Create"
                 )
             },
             label = { Text("Create") },
-            selected = createSelected,
-            onClick = { navController.navigate(Routes.CreateEvent.route) }
+            colors = itemColors
         )
 
-        // ---- PROFILE ----
-        val profileSelected = currentRoute == Routes.Profile.route
+        // PROFILE
         NavigationBarItem(
+            selected = currentRoute == Routes.Profile.route,
+            onClick = { navController.navigate(Routes.Profile.route) },
             icon = {
                 Icon(
-                    imageVector = if (profileSelected) Icons.Filled.AccountCircle else Icons.Outlined.AccountCircle,
+                    imageVector = if (currentRoute == Routes.Profile.route)
+                        Icons.Filled.AccountCircle else Icons.Outlined.AccountCircle,
                     contentDescription = "Profile"
                 )
             },
             label = { Text("Profile") },
-            selected = profileSelected,
-            onClick = { navController.navigate(Routes.Profile.route) }
+            colors = itemColors
         )
     }
 }
+
