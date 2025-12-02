@@ -48,7 +48,7 @@ fun EventEchoApp() {
     ) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            topBar = { TopBar(navController) },
+            topBar = { TopBar(navController, currentRoute, onBackClick = { navController.popBackStack() }) },
             bottomBar = {
                 if (showBottomBar) {
                     BottomBar(navController)
