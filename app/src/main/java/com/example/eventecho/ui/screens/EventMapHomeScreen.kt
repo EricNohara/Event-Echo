@@ -87,7 +87,7 @@ fun EventMapHomeScreen(
             }
 
             val request = LocationRequest.Builder(
-                Priority.PRIORITY_HIGH_ACCURACY, 1500L
+                Priority.PRIORITY_BALANCED_POWER_ACCURACY, 1500L
             ).setMaxUpdates(1).build()
 
             fusedLocation.requestLocationUpdates(
