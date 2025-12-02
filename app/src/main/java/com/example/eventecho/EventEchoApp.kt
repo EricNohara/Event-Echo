@@ -5,7 +5,9 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -46,14 +48,21 @@ fun EventEchoApp() {
     ) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            topBar = {TopBar(navController)},
+            topBar = { TopBar(navController) },
             bottomBar = {
                 if (showBottomBar) {
                     BottomBar(navController)
                 }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.background
         ) { innerPadding ->
-            Box(modifier = Modifier.padding(innerPadding)) {
+
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                color = MaterialTheme.colorScheme.background
+            ) {
                 AppNavGraph(navController)
             }
         }

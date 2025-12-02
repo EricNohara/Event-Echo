@@ -40,7 +40,7 @@ fun ProfileScreen(
     // READ DARK MODE FROM DATASTORE
     val isDarkMode by context.readDarkMode().collectAsState(initial = false)
 
-    Scaffold(containerColor = Color(0xFFF8F9FA)) { padding ->
+    Scaffold { padding ->
         if (uiState.isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
@@ -234,7 +234,7 @@ fun StatsRow(attended: Int, created: Int, favorites: Int) {
 @Composable
 fun StatCard(icon: ImageVector, count: String, label: String) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier
             .width(105.dp)
@@ -247,10 +247,10 @@ fun StatCard(icon: ImageVector, count: String, label: String) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(imageVector = icon, contentDescription = null, tint = Color.Black)
+            Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = count, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Text(text = label, fontSize = 10.sp, color = Color.Gray)
+            Text(text = label, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
