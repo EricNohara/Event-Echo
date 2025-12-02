@@ -9,7 +9,7 @@
 
 ## Documentation
 
-Please find our documentation (Architecture Diagram, Progress Chart, Presentation) in the /Doc directory.
+Please find our documentation (Architecture Diagram, Progress Chart, Presentation, AI Usage Statement) in the /Doc directory.
 
 ---
 
@@ -25,7 +25,8 @@ Please find our documentation (Architecture Diagram, Progress Chart, Presentatio
    - [Stretch Goals](#stretch-goals)
 7. [APIs & Sensors](#apis--sensors)
 8. [Feature List Progress](#feature-list-status)
-9. [Team Roles & Responsibilities](#team-roles--responsibilities)
+9. [Testing Strategy](#testing-strategy)
+10. [Team Roles & Responsibilities](#team-roles--responsibilities)
 
 
 ---
@@ -144,6 +145,17 @@ Event Echo solves these by providing a **shared, location-tied memory wall**.
 - Camera Sensor integration
 
 ---
+
+## Testing Strategy
+- Utilize Logs & Logcat to write and view log/error messages
+- Use test data to quickly test UI changes
+- Test through the UI as an end user would
+- Thorough testing for edge cases and unintended behavior by messing with UI
+- In-Progress: Automated Compose UI Testing
+- View data in Firebase to ensure correct values
+
+---
+
 ## Team Roles & Responsibilities
 
 | Role                         | Responsibilities                                                          |
