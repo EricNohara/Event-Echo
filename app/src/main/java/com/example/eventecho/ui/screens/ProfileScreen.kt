@@ -1,7 +1,9 @@
 package com.example.eventecho.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -86,7 +88,10 @@ fun ProfileScreen(
                     StatsRow(
                         attended = uiState.user.eventsAttended,
                         created = uiState.user.eventsCreated,
-                        favorites = uiState.user.favorites
+                        favorites = uiState.user.favorites,
+                        onFavoritesClick = {
+                            navController.navigate("saved_events")
+                        }
                     )
                     Spacer(modifier = Modifier.height(24.dp))
                 }
@@ -220,40 +225,73 @@ fun ProfileHeader(
 }
 
 @Composable
-fun StatsRow(attended: Int, created: Int, favorites: Int) {
+fun StatsRow(
+    attended: Int,
+    created: Int,
+    favorites: Int,
+    onFavoritesClick: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        StatCard(icon = Icons.Default.CalendarToday, count = attended.toString(), label = "Events Attended")
-        StatCard(icon = Icons.Default.Group, count = created.toString(), label = "Events Created")
-        StatCard(icon = Icons.Default.FavoriteBorder, count = favorites.toString(), label = "Favorites")
+        StatCard(
+            icon = Icons.Default.CalendarToday,
+            count = attended.toString(),
+            label = "Events Attended"
+        )
+
+        StatCard(
+            icon = Icons.Default.Group,
+            count = created.toString(),
+            label = "Events Created"
+        )
+
+        StatCard(
+            icon = Icons.Default.FavoriteBorder,
+            count = favorites.toString(),
+            label = "Favorites",
+            onClick = onFavoritesClick
+        )
     }
 }
 
+
 @Composable
-fun StatCard(icon: ImageVector, count: String, label: String) {
+fun StatCard(
+    icon: ImageVector,
+    count: String,
+    label: String,
+    onClick: (() -> Unit)? = null
+) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier
             .width(105.dp)
             .height(100.dp)
+            .then(
+                if (onClick != null)
+                    Modifier.clickable { onClick() }
+                else
+                    Modifier
+            )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
         ) {
-            Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = count, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Text(text = label, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(icon, contentDescription = null)
+            Spacer(Modifier.height(8.dp))
+            Text(count, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text(label, fontSize = 10.sp)
         }
     }
 }
+
 
 @Composable
 fun MemberSinceFooter(date: String) {

@@ -60,7 +60,7 @@ fun AppNavGraph(navController: NavHostController) {
         }
 
         composable(Routes.SavedEvents.route) {
-            SavedEventsScreen(navController)
+            SavedEventsScreen(navController, repo)
         }
 
         composable(Routes.MapFullScreen.route) {
@@ -73,7 +73,7 @@ fun AppNavGraph(navController: NavHostController) {
             val vm: ProfileViewModel = viewModel(
                 factory = ProfileViewModelFactory(
                     userRepo = userRepo,
-                    eventRepo = repo   // <--- USE SHARED REPO HERE
+                    eventRepo = repo
                 )
             )
 
