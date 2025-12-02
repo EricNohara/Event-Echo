@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Looper
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -54,29 +55,38 @@ fun MapFullScreen(
         rememberLauncherForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { perms ->
+            Log.d("MapScreen", "Permission result: $perms")
             permissionGranted = perms[Manifest.permission.ACCESS_FINE_LOCATION] == true
         }
 
     // Ask GPS permission
     LaunchedEffect(Unit) {
+        Log.d("MapScreen", "Checking location permission...")
         val granted = ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
 
         if (!granted) {
+            Log.i("MapScreen", "Location permission NOT granted, requesting...")
             requestPermissionLauncher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 )
             )
-        } else permissionGranted = true
+        } else {
+            Log.d("MapScreen", "Location permission ALREADY granted")
+            permissionGranted = true
+        }
     }
 
     // GPS fetch logic
     val fetchLocation: () -> Unit = fetchLocation@{
-        if (!permissionGranted) return@fetchLocation
+        if (!permissionGranted) {
+            Log.w("MapScreen", "Location fetch blocked — permission NOT granted")
+            return@fetchLocation
+        }
 
         fusedLocation.lastLocation.addOnSuccessListener { loc ->
             if (loc != null) {
@@ -111,6 +121,7 @@ fun MapFullScreen(
     // Move map on search
     LaunchedEffect(cameraMove) {
         cameraMove?.let {
+            Log.d("MapScreen", "Camera movement event received: $it")
             cameraState.animate(
                 update = CameraUpdateFactory.newLatLngZoom(it, 14f),
                 durationMs = 900
@@ -135,6 +146,7 @@ fun MapFullScreen(
             events = mapPins,
             isMyLocationEnabled = permissionGranted,
             onMarkerClick = { pin ->
+                Log.d("Navigation", "Marker clicked → event_detail/${pin.id}")
                 navController.navigate("event_detail/${pin.id}")
             }
         )
@@ -142,6 +154,7 @@ fun MapFullScreen(
         // SEARCH BAR
         Box(modifier = Modifier.align(Alignment.TopCenter)) {
             MapSearchBar { query ->
+                Log.d("MapScreen", "Search query submitted: $query")
                 viewModel.performSearch(query, context)
             }
         }

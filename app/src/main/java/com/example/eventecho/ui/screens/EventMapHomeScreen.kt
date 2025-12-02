@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Looper
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -64,6 +65,7 @@ fun EventMapHomeScreen(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { perms ->
             permissionGranted = perms[Manifest.permission.ACCESS_FINE_LOCATION] == true
+            Log.d("LocationPerm", "Permission result: $permissionGranted")
         }
 
     LaunchedEffect(Unit) {
@@ -71,27 +73,39 @@ fun EventMapHomeScreen(
             context, Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
 
+        Log.d("LocationPerm", "Initial permission granted: $granted")
+
         if (!granted) {
+            Log.d("LocationPerm", "Requesting location permissions…")
             requestPermissionLauncher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 )
             )
-        } else permissionGranted = true
+        } else {
+            permissionGranted = true
+            Log.d("LocationPerm", "Permission already granted.")
+        }
     }
 
     // GPS FETCH
     fun fetchLocation() {
-        if (!permissionGranted) return
+        if (!permissionGranted) {
+            Log.d("LocationFetch", "fetchLocation called but permission NOT granted")
+            return
+        }
 
         fusedLocation.lastLocation.addOnSuccessListener { loc ->
             if (loc != null) {
                 val pos = LatLng(loc.latitude, loc.longitude)
+                Log.d("LocationFetch", "LastLocation success: $pos")
                 viewModel.updateUserLocation(pos)
                 cameraPositionState.position = CameraPosition.fromLatLngZoom(pos, 14f)
                 return@addOnSuccessListener
             }
+
+            Log.d("LocationFetch", "LastLocation = null → requesting fresh update")
 
             val request = LocationRequest.Builder(
                 Priority.PRIORITY_HIGH_ACCURACY, 1500L
@@ -103,6 +117,7 @@ fun EventMapHomeScreen(
                     override fun onLocationResult(result: LocationResult) {
                         val fresh = result.lastLocation ?: return
                         val pos = LatLng(fresh.latitude, fresh.longitude)
+                        Log.d("LocationFetch", "Fresh GPS result: $pos")
                         viewModel.updateUserLocation(pos)
                         cameraPositionState.position =
                             CameraPosition.fromLatLngZoom(pos, 14f)
@@ -115,12 +130,14 @@ fun EventMapHomeScreen(
     }
 
     LaunchedEffect(permissionGranted) {
+        Log.d("LocationPerm", "permissionGranted changed → $permissionGranted")
         if (permissionGranted) fetchLocation()
     }
 
     // SEARCH BAR CAMERA MOVE (ONLY TOP BAR)
     LaunchedEffect(cameraMove) {
         cameraMove?.let {
+            Log.d("CameraMove", "CameraMove triggered with: $it")
             if (mapLoaded) {
                 cameraPositionState.animate(
                     update = CameraUpdateFactory.newLatLngZoom(it, 14f),
