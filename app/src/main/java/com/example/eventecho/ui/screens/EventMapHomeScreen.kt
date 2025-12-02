@@ -22,10 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
-import com.example.eventecho.ui.components.EventMap
-import com.example.eventecho.ui.components.EventList
-import com.example.eventecho.ui.components.MapSearchBar
-import com.example.eventecho.ui.components.DatePicker
+import com.example.eventecho.ui.components.*
 import com.example.eventecho.ui.viewmodels.EventMapViewModel
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -48,14 +45,9 @@ fun EventMapHomeScreen(
     val isLoading by viewModel.isLoading.collectAsState()
 
     val cameraPositionState = rememberCameraPositionState()
-
-    // Track when Google Maps is ready to accept CameraUpdateFactory calls
     var mapLoaded by remember { mutableStateOf(false) }
 
-    // ----------------------------------------------------
     // LOCATION PERMISSIONS
-    // ----------------------------------------------------
-
     val fusedLocation = remember { LocationServices.getFusedLocationProviderClient(context) }
     var permissionGranted by remember { mutableStateOf(false) }
 
@@ -66,11 +58,9 @@ fun EventMapHomeScreen(
             permissionGranted = perms[Manifest.permission.ACCESS_FINE_LOCATION] == true
         }
 
-    // Request permissions once
     LaunchedEffect(Unit) {
         val granted = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
+            context, Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
 
         if (!granted) {
@@ -83,11 +73,8 @@ fun EventMapHomeScreen(
         } else permissionGranted = true
     }
 
-    // ----------------------------------------------------
     // GPS FETCH
-    // ----------------------------------------------------
-
-    val fetchLocation = fun() {
+    fun fetchLocation() {
         if (!permissionGranted) return
 
         fusedLocation.lastLocation.addOnSuccessListener { loc ->
@@ -98,10 +85,8 @@ fun EventMapHomeScreen(
                 return@addOnSuccessListener
             }
 
-            // fallback request
             val request = LocationRequest.Builder(
-                Priority.PRIORITY_HIGH_ACCURACY,
-                1500L
+                Priority.PRIORITY_HIGH_ACCURACY, 1500L
             ).setMaxUpdates(1).build()
 
             fusedLocation.requestLocationUpdates(
@@ -111,7 +96,8 @@ fun EventMapHomeScreen(
                         val fresh = result.lastLocation ?: return
                         val pos = LatLng(fresh.latitude, fresh.longitude)
                         viewModel.updateUserLocation(pos)
-                        cameraPositionState.position = CameraPosition.fromLatLngZoom(pos, 14f)
+                        cameraPositionState.position =
+                            CameraPosition.fromLatLngZoom(pos, 14f)
                         fusedLocation.removeLocationUpdates(this)
                     }
                 },
@@ -124,10 +110,7 @@ fun EventMapHomeScreen(
         if (permissionGranted) fetchLocation()
     }
 
-    // ----------------------------------------------------
-    // SEARCH CAMERA MOVEMENT
-    // ----------------------------------------------------
-
+    // SEARCH BAR CAMERA MOVE (ONLY TOP BAR)
     LaunchedEffect(cameraMove) {
         cameraMove?.let {
             if (mapLoaded) {
@@ -140,20 +123,14 @@ fun EventMapHomeScreen(
         }
     }
 
-    // ----------------------------------------------------
-    // FILTER STATE
-    // ----------------------------------------------------
-
+    // FILTER STATE (Dropdown)
     val radiusState = remember { mutableStateOf(viewModel.radiusKm) }
     val startDateState = remember { mutableStateOf(viewModel.selectedDate) }
     val endDateState = remember { mutableStateOf(viewModel.selectedDate) }
     val searchQuery = remember { mutableStateOf("") }
     var filterMenuExpanded by remember { mutableStateOf(false) }
 
-    // ----------------------------------------------------
-    // WHEN FILTERS CHANGE → UPDATE VIEWMODEL + ADJUST MAP
-    // ----------------------------------------------------
-
+    // FILTER CHANGES - ZOOM + REFRESH
     LaunchedEffect(radiusState.value, startDateState.value, endDateState.value) {
 
         viewModel.radiusKm = radiusState.value
@@ -162,41 +139,37 @@ fun EventMapHomeScreen(
         val center = cameraPositionState.position.target
 
         if (mapLoaded) {
-            val zoom = radiusKmToZoom(radiusState.value)
-
+            val zoom = radiusToZoom(radiusState.value)
             cameraPositionState.animate(
                 update = CameraUpdateFactory.newLatLngZoom(center, zoom),
-                durationMs = 600
+                durationMs = 500
             )
         }
 
-        // refresh events
         viewModel.onMapCameraIdle(center)
     }
 
-    // ----------------------------------------------------
-    // MAP CAMERA IDLE → REFRESH EVENTS
-    // ----------------------------------------------------
-
+    // MAP CAMERA IDLE
     LaunchedEffect(cameraPositionState.isMoving) {
         if (!cameraPositionState.isMoving) {
-            val center = cameraPositionState.position.target
-            viewModel.onMapCameraIdle(center)
+            viewModel.onMapCameraIdle(cameraPositionState.position.target)
         }
     }
 
-    // ----------------------------------------------------
-    // UI LAYOUT
-    // ----------------------------------------------------
+    // SEARCH BAR BELOW MAP — CLIENT FILTER ONLY
+    val filteredEvents by remember(events, searchQuery.value) {
+        derivedStateOf {
+            val q = searchQuery.value.trim().lowercase()
+            if (q.isBlank()) events
+            else events.filter { it.title.lowercase().contains(q) }
+        }
+    }
 
-    Scaffold { padding ->
-        Column(
-            modifier = Modifier.fillMaxWidth()
-        ) {
+    // UI
+    Scaffold {
+        Column(Modifier.fillMaxWidth()) {
 
-            // =============================
             // MAP
-            // =============================
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -212,16 +185,14 @@ fun EventMapHomeScreen(
                     onMapLoaded = { mapLoaded = true }
                 )
 
-                // Search Bar
                 Box(Modifier.align(Alignment.TopCenter)) {
                     MapSearchBar { query ->
                         viewModel.performSearch(query, context)
                     }
                 }
 
-                // GPS
                 IconButton(
-                    onClick = fetchLocation,
+                    onClick = { fetchLocation() },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(top = 90.dp, end = 16.dp)
@@ -230,7 +201,6 @@ fun EventMapHomeScreen(
                     Icon(Icons.Default.MyLocation, "Current Location")
                 }
 
-                // Loading
                 if (isLoading) {
                     Box(
                         modifier = Modifier
@@ -243,9 +213,7 @@ fun EventMapHomeScreen(
                 }
             }
 
-            // =============================
             // FILTER ROW
-            // =============================
             FilterRow(
                 radiusState = radiusState,
                 startDateState = startDateState,
@@ -255,12 +223,10 @@ fun EventMapHomeScreen(
                 onExpandMenu = { filterMenuExpanded = it }
             )
 
-            // =============================
             // EVENT LIST
-            // =============================
             EventList(
                 navController = navController,
-                events = events
+                events = filteredEvents
             )
         }
     }
@@ -283,12 +249,9 @@ fun FilterRow(
             .padding(12.dp)
     ) {
 
-        // Row with search + filter button
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
 
+            // SEARCH BAR (filters only list)
             TextField(
                 value = searchQuery.value,
                 onValueChange = { searchQuery.value = it },
@@ -306,7 +269,7 @@ fun FilterRow(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Dropdown anchor
+            // FILTER BUTTON
             Box {
                 Button(
                     onClick = { onExpandMenu(true) },
@@ -323,6 +286,7 @@ fun FilterRow(
                     onDismissRequest = { onExpandMenu(false) }
                 ) {
 
+                    // Radius
                     Text("Radius: ${radiusState.value} miles", Modifier.padding(12.dp))
 
                     Slider(
@@ -334,7 +298,7 @@ fun FilterRow(
 
                     Spacer(Modifier.height(12.dp))
 
-                    // Centered date pickers
+                    // Start Date Picker
                     Column(
                         Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -351,6 +315,7 @@ fun FilterRow(
 
                     Spacer(Modifier.height(12.dp))
 
+                    // End Date Picker
                     Column(
                         Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -358,9 +323,7 @@ fun FilterRow(
                         Text("End Date")
                         DatePicker(
                             initialDate = endDateState.value,
-                            onDateSelected = {
-                                endDateState.value = it
-                            }
+                            onDateSelected = { endDateState.value = it }
                         )
                     }
                 }
@@ -369,17 +332,16 @@ fun FilterRow(
     }
 }
 
-// ----------------------------------------------------
-// Convert radius miles → map zoom level
-// ----------------------------------------------------
-fun radiusKmToZoom(radius: Int): Float {
-    return when {
-        radius <= 2 -> 15f
-        radius <= 5 -> 13f
-        radius <= 10 -> 12f
-        radius <= 25 -> 11f
-        radius <= 50 -> 10f
-        radius <= 75 -> 9f
-        else -> 8f
+// Convert miles radius → approximate zoom
+fun radiusToZoom(radius: Int): Float {
+    return when (radius) {
+        in 1..2 -> 14f
+        in 3..5 -> 13f
+        in 6..10 -> 12f
+        in 11..20 -> 11f
+        in 21..40 -> 10f
+        in 41..70 -> 9f
+        in 71..100 -> 8f
+        else -> 7f
     }
 }
