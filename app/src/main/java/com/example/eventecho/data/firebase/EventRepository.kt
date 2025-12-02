@@ -148,4 +148,14 @@ class EventRepository(
         val doc = firestore.collection("users").document(uid).get().await()
         return doc.get("savedEvents") as? List<String> ?: emptyList()
     }
+
+    // user created events
+    suspend fun getEventsCreatedByUser(uid: String): List<Event> {
+        val snapshot = firestore.collection("events")
+            .whereEqualTo("createdBy", uid)
+            .get()
+            .await()
+
+        return snapshot.documents.mapNotNull { it.toObject(Event::class.java)?.copy(id = it.id) }
+    }
 }

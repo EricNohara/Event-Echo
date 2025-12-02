@@ -89,9 +89,8 @@ fun ProfileScreen(
                         attended = uiState.user.eventsAttended,
                         created = uiState.user.eventsCreated,
                         favorites = uiState.user.favorites,
-                        onFavoritesClick = {
-                            navController.navigate("saved_events")
-                        }
+                        onFavoritesClick = { navController.navigate("saved_events") },
+                        onCreatedClick = { navController.navigate("created_events") }
                     )
                     Spacer(modifier = Modifier.height(28.dp))
                 }
@@ -251,7 +250,8 @@ fun StatsRow(
     attended: Int,
     created: Int,
     favorites: Int,
-    onFavoritesClick: () -> Unit
+    onFavoritesClick: () -> Unit,
+    onCreatedClick: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -266,7 +266,8 @@ fun StatsRow(
         StatCard(
             icon = Icons.Default.Group,
             count = created.toString(),
-            label = "Events Created"
+            label = "Events Created",
+            onClick = onCreatedClick
         )
 
         StatCard(
