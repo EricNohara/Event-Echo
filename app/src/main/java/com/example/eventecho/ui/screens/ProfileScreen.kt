@@ -90,6 +90,7 @@ fun ProfileScreen(
                         attended = uiState.user.eventsAttended,
                         created = uiState.user.eventsCreated,
                         favorites = uiState.user.favorites,
+                        onAttendedClick = {navController.navigate("attended_events")},
                         onFavoritesClick = { navController.navigate("saved_events") },
                         onCreatedClick = { navController.navigate("created_events") }
                     )
@@ -265,6 +266,7 @@ fun StatsRow(
     attended: Int,
     created: Int,
     favorites: Int,
+    onAttendedClick: () -> Unit,
     onFavoritesClick: () -> Unit,
     onCreatedClick: () -> Unit
 ) {
@@ -275,7 +277,8 @@ fun StatsRow(
         StatCard(
             icon = Icons.Default.CalendarToday,
             count = attended.toString(),
-            label = "Events Attended"
+            label = "Events Attended",
+            onClick = onAttendedClick
         )
 
         StatCard(

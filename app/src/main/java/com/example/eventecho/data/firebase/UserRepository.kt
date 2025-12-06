@@ -81,4 +81,11 @@ class UserRepository {
             .update("eventsAttended", FieldValue.arrayUnion(eventId))
             .await()
     }
+
+    // get events user attended
+    suspend fun getEventsAttended(): List<String> {
+        val uid = FirebaseAuth.getInstance().currentUser!!.uid
+        val doc = db.collection("users").document(uid).get().await()
+        return doc.get("eventsAttended") as? List<String> ?: emptyList()
+    }
 }

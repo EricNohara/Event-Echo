@@ -70,9 +70,7 @@ fun AddToMemoryWallScreen(
             verticalArrangement = Arrangement.Top
         ) {
 
-            //------------------------------------------------------
             // IMAGE PREVIEW
-            //------------------------------------------------------
             if (imageUri != null) {
                 AsyncImage(
                     model = imageUri,
@@ -84,9 +82,7 @@ fun AddToMemoryWallScreen(
                 Spacer(Modifier.height(16.dp))
             }
 
-            //------------------------------------------------------
             // PICK IMAGE BUTTON
-            //------------------------------------------------------
             Button(
                 onClick = { imagePickerLauncher.launch("image/*") },
                 modifier = Modifier.fillMaxWidth()
@@ -96,9 +92,7 @@ fun AddToMemoryWallScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            //------------------------------------------------------
             // DESCRIPTION INPUT
-            //------------------------------------------------------
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
@@ -108,9 +102,7 @@ fun AddToMemoryWallScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            //------------------------------------------------------
             // ERROR MESSAGE
-            //------------------------------------------------------
             errorMessage?.let {
                 Text(
                     text = it,
@@ -119,9 +111,7 @@ fun AddToMemoryWallScreen(
                 )
             }
 
-            //------------------------------------------------------
             // UPLOAD BUTTON
-            //------------------------------------------------------
             Button(
                 onClick = {
                     if (description.isBlank() || imageUri == null) {
@@ -136,18 +126,14 @@ fun AddToMemoryWallScreen(
 
                     coroutineScope.launch {
                         try {
-                            //--------------------------------------------------
                             // 1. Upload image to Firebase Storage
-                            //--------------------------------------------------
                             val imageUrl = memoryRepo.uploadMemoryImage(
                                 eventId = eventId,
                                 userId = userId,
                                 imageUri = imageUri!!
                             )
 
-                            //--------------------------------------------------
                             // 2. Create memory document in Firestore
-                            //--------------------------------------------------
                             memoryRepo.createMemory(
                                 eventId = eventId,
                                 userId = userId,
@@ -155,14 +141,10 @@ fun AddToMemoryWallScreen(
                                 imageUrl = imageUrl
                             )
 
-                            //--------------------------------------------------
                             // 3. Add this event to the user's attended list
-                            //--------------------------------------------------
                             userRepo.addEventToAttended(eventId)
 
-                            //--------------------------------------------------
                             // 4. Navigate back to Memory Wall
-                            //--------------------------------------------------
                             navController.popBackStack()
 
                         } catch (e: Exception) {

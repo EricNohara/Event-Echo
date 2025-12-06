@@ -67,9 +67,9 @@ fun AppNavGraph(navController: NavHostController) {
             CreatedEventsScreen(navController, repo)
         }
 
-//        composable(Routes.AttendedEvents.route) {
-//            AttendedEventsScreen(navController, repo)
-//        }
+        composable(Routes.AttendedEvents.route) {
+            AttendedEventsScreen(navController, repo)
+        }
 
         composable(Routes.MapFullScreen.route) {
             MapFullScreen(navController, mapViewModel)
