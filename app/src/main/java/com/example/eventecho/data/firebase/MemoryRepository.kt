@@ -73,22 +73,45 @@ class MemoryRepository(
     }
 
     // Upvote a memory
-    suspend fun upvoteMemory(eventId: String, memoryOwnerId: String, voterId: String) {
+    suspend fun toggleUpvote(eventId: String, memoryOwnerId: String, voterId: String) {
         val memoryRef = db.collection("events")
             .document(eventId)
             .collection("memories")
             .document(memoryOwnerId)
 
+        // 1. Run upvote toggle
         db.runTransaction { tx ->
             val snapshot = tx.get(memoryRef)
             val upvotedBy = snapshot.get("upvotedBy") as? List<String> ?: emptyList()
 
-            if (voterId !in upvotedBy) {
+            val isCurrentlyUpvoted = voterId in upvotedBy
+
+            if (isCurrentlyUpvoted) {
+                // Remove upvote
+                tx.update(memoryRef, mapOf(
+                    "upvoteCount" to FieldValue.increment(-1),
+                    "upvotedBy" to FieldValue.arrayRemove(voterId)
+                ))
+
+                // Decrement owner's total
                 tx.update(
-                    memoryRef, mapOf(
-                        "upvoteCount" to FieldValue.increment(1),
-                        "upvotedBy" to FieldValue.arrayUnion(voterId)
-                    )
+                    db.collection("users").document(memoryOwnerId),
+                    "totalUpvotesReceived",
+                    FieldValue.increment(-1)
+                )
+
+            } else {
+                // Add upvote
+                tx.update(memoryRef, mapOf(
+                    "upvoteCount" to FieldValue.increment(1),
+                    "upvotedBy" to FieldValue.arrayUnion(voterId)
+                ))
+
+                // Increment owner's total
+                tx.update(
+                    db.collection("users").document(memoryOwnerId),
+                    "totalUpvotesReceived",
+                    FieldValue.increment(1)
                 )
             }
         }.await()

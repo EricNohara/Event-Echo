@@ -22,6 +22,7 @@ class UserRepository {
             "bio" to "",
             "profilePicUrl" to null,
             "createdAt" to FieldValue.serverTimestamp(),
+            "totalUpvotesReceived" to 0,
             "eventsAttended" to emptyList<String>(),
             "eventsCreated" to emptyList<String>(),
             "savedEvents" to emptyList<String>(),
@@ -87,5 +88,13 @@ class UserRepository {
         val uid = FirebaseAuth.getInstance().currentUser!!.uid
         val doc = db.collection("users").document(uid).get().await()
         return doc.get("eventsAttended") as? List<String> ?: emptyList()
+    }
+
+    // update total number of upvotes
+    suspend fun updateTotalUpvotes(userId: String, newTotal: Int) {
+        db.collection("users")
+            .document(userId)
+            .update("totalUpvotesReceived", newTotal)
+            .await()
     }
 }

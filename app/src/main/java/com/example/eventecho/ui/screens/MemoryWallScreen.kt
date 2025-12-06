@@ -16,6 +16,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.example.eventecho.data.firebase.MemoryRepository
 import com.example.eventecho.ui.navigation.Routes
+import com.google.firebase.auth.FirebaseAuth
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -78,12 +79,20 @@ fun MemoryWallScreen(
             }
 
             // MEMORY LIST
+            val currentUserId = FirebaseAuth.getInstance().currentUser!!.uid
+
             LazyColumn {
-                items(
-                    items = memories,
-                    key = { it.userId }
-                ) { memory ->
-                    MemoryCard(memory)
+                items(memories, key = { it.userId }) { memory ->
+                    MemoryCard(
+                        memory = memory,
+                        hasUpvoted = memory.upvotedBy.contains(currentUserId),
+                        onToggleUpvote = {
+                            viewModel.toggleUpvote(eventId, memory.userId)
+                        },
+                        onClick = {
+                            navController.navigate("memory_view/${eventId}/${memory.userId}")
+                        }
+                    )
                 }
             }
         }

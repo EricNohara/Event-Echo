@@ -90,6 +90,7 @@ fun ProfileScreen(
                         attended = uiState.user.eventsAttended,
                         created = uiState.user.eventsCreated,
                         favorites = uiState.user.favorites,
+                        totalUpvotes = uiState.user.totalUpvotesReceived,
                         onAttendedClick = {navController.navigate("attended_events")},
                         onFavoritesClick = { navController.navigate("saved_events") },
                         onCreatedClick = { navController.navigate("created_events") }
@@ -266,78 +267,117 @@ fun StatsRow(
     attended: Int,
     created: Int,
     favorites: Int,
+    totalUpvotes: Int,
     onAttendedClick: () -> Unit,
     onFavoritesClick: () -> Unit,
     onCreatedClick: () -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
+
         StatCard(
             icon = Icons.Default.CalendarToday,
             count = attended.toString(),
-            label = "Events Attended",
+            label = "Attended",
             onClick = onAttendedClick
         )
 
         StatCard(
-            icon = Icons.Default.Group,
+            icon = Icons.Default.CreateNewFolder,
             count = created.toString(),
-            label = "Events Created",
+            label = "Created",
             onClick = onCreatedClick
         )
 
         StatCard(
-            icon = Icons.Default.FavoriteBorder,
+            icon = Icons.Default.Favorite,
             count = favorites.toString(),
             label = "Favorites",
             onClick = onFavoritesClick
         )
+
+        StatCard(
+            icon = Icons.Default.ThumbUp,
+            count = totalUpvotes.toString(),
+            label = "Upvotes"
+        )
     }
 }
 
-
 @Composable
-fun StatCard(
+fun RowScope.StatCard(
     icon: ImageVector,
     count: String,
     label: String,
     onClick: (() -> Unit)? = null
 ) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ElevatedCard(
         modifier = Modifier
-            .width(105.dp)
-            .height(100.dp)
+            .weight(1f)
+            .height(110.dp)
+            .padding(horizontal = 4.dp)
             .then(
-                if (onClick != null)
-                    Modifier.clickable { onClick() }
-                else
-                    Modifier
-            )
+                if (onClick != null) Modifier.clickable { onClick() }
+                else Modifier
+            ),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(16.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .padding(12.dp),
             verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(icon, contentDescription = null)
+
+            // Icon circle with subtle tint
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
             Spacer(Modifier.height(8.dp))
-            Text(count, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Text(label, fontSize = 10.sp)
+
+            // Stat number (onSurface)
+            Text(
+                text = count,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+
+            // Label (onSurfaceVariant)
+            Text(
+                text = label,
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
 
-
 @Composable
 fun MemberSinceFooter(date: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(Icons.Default.CalendarToday, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
+        Icon(Icons.Default.CalendarToday, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
         Spacer(modifier = Modifier.width(8.dp))
         Text("Member since $date", color = Color.Gray)
     }

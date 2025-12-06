@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import androidx.lifecycle.ViewModelProvider
+import com.example.eventecho.data.firebase.UserRepository
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 class MemoryWallViewModel(
     private val memoryRepo: MemoryRepository
@@ -26,10 +29,15 @@ class MemoryWallViewModel(
     fun loadMemories(eventId: String) {
         viewModelScope.launch {
             val items = memoryRepo.getMemories(eventId)
-
             _memories.value = items
-
             _hasUploaded.value = items.any { it.userId == currentUserId }
+        }
+    }
+
+    fun toggleUpvote(eventId: String, memoryOwnerId: String) {
+        viewModelScope.launch {
+            memoryRepo.toggleUpvote(eventId, memoryOwnerId, currentUserId)
+            loadMemories(eventId) // Refresh UI
         }
     }
 }
