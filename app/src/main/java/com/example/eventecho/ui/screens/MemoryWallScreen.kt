@@ -90,7 +90,9 @@ fun MemoryWallScreen(
                             viewModel.toggleUpvote(eventId, memory.userId)
                         },
                         onClick = {
-                            navController.navigate("memory_view/${eventId}/${memory.userId}")
+                            navController.navigate(
+                                Routes.MemoryView.createRoute(eventId, memory.userId)
+                            )
                         }
                     )
                 }

@@ -26,4 +26,9 @@ sealed class Routes(val route: String) {
     object AddToMemoryWall : Routes("add_memory/{eventId}") {
         fun createRoute(eventId: String) = "add_memory/$eventId"
     }
+
+    object MemoryView : Routes("memory_view/{eventId}/{userId}") {
+        fun createRoute(eventId: String, userId: String) =
+            "memory_view/$eventId/$userId"
+    }
 }
