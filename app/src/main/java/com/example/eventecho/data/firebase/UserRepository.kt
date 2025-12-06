@@ -6,6 +6,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
+import kotlinx.coroutines.tasks.await
 
 class UserRepository {
 
@@ -69,5 +70,15 @@ class UserRepository {
             }
             .addOnSuccessListener { uri -> onSuccess(uri.toString()) }
             .addOnFailureListener(onError)
+    }
+
+    // add event to attended events - used after posting a memory
+    suspend fun addEventToAttended(eventId: String) {
+        val uid = FirebaseAuth.getInstance().currentUser!!.uid
+
+        Firebase.firestore.collection("users")
+            .document(uid)
+            .update("eventsAttended", FieldValue.arrayUnion(eventId))
+            .await()
     }
 }
