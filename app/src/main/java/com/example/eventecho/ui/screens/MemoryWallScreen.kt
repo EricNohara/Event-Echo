@@ -75,10 +75,14 @@ fun MemoryWallScreen(
             if (!hasUploaded) {
                 FloatingActionButton(
                     onClick = {
-                        navController.navigate(
-                            Routes.AddToMemoryWall.createRoute(eventId)
-                        )
-                    }
+                        navController.navigate(Routes.AddToMemoryWall.createRoute(eventId))
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    elevation = FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 6.dp,
+                        pressedElevation = 12.dp
+                    )
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
