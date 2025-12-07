@@ -55,24 +55,10 @@ fun CreatedEventsScreen(
                 }
 
                 else -> {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                "Created Events",
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        EventGrid(
-                            navController = navController,
-                            events = createdEvents
-                        )
-                    }
+                    EventGrid(
+                        navController = navController,
+                        events = createdEvents
+                    )
                 }
             }
         }

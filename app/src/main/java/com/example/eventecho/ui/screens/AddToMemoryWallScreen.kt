@@ -3,11 +3,14 @@ package com.example.eventecho.ui.screens
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -24,7 +27,6 @@ fun AddToMemoryWallScreen(
     navController: NavController,
     eventId: String
 ) {
-    // Repositories (remember outside callbacks)
     val memoryRepo = remember {
         MemoryRepository(
             db = FirebaseFirestore.getInstance(),
@@ -34,137 +36,152 @@ fun AddToMemoryWallScreen(
 
     val userRepo = remember { UserRepository() }
 
-    // UI State
     var description by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var isUploading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // Coroutine scope
     val coroutineScope = rememberCoroutineScope()
 
-    // Image picker launcher
+    val maxChars = 400
+
     val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        ActivityResultContracts.GetContent()
     ) { uri ->
         imageUri = uri
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Add Memory") },
-                navigationIcon = {
-                    TextButton(onClick = { navController.popBackStack() }) {
-                        Text("< Back")
+        bottomBar = {
+            Surface (color = MaterialTheme.colorScheme.background) {
+                Button(
+                    onClick = {
+                        val userId = FirebaseAuth.getInstance().currentUser!!.uid
+                        isUploading = true
+                        errorMessage = null
+
+                        coroutineScope.launch {
+                            try {
+                                val imageUrl = memoryRepo.uploadMemoryImage(
+                                    eventId, userId, imageUri!!
+                                )
+
+                                memoryRepo.createMemory(
+                                    eventId = eventId,
+                                    userId = userId,
+                                    description = description,
+                                    imageUrl = imageUrl
+                                )
+
+                                userRepo.addEventToAttended(eventId)
+                                navController.popBackStack()
+
+                            } catch (e: Exception) {
+                                errorMessage = e.message ?: "Upload failed."
+                            } finally {
+                                isUploading = false
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    enabled = !isUploading &&
+                            description.isNotBlank() &&
+                            description.length <= maxChars &&
+                            imageUri != null
+                ) {
+                    if (isUploading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Upload Memory")
                     }
                 }
-            )
+            }
         }
     ) { padding ->
+
         Column(
             modifier = Modifier
                 .padding(padding)
-                .padding(16.dp)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.Top
+                .padding(horizontal = 16.dp)
+                .fillMaxSize()
         ) {
-
-            // IMAGE PREVIEW
-            if (imageUri != null) {
-                AsyncImage(
-                    model = imageUri,
-                    contentDescription = "Selected Image",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                )
-                Spacer(Modifier.height(16.dp))
-            }
-
-            // PICK IMAGE BUTTON
-            Button(
-                onClick = { imagePickerLauncher.launch("image/*") },
-                modifier = Modifier.fillMaxWidth()
+            // IMAGE SELECTOR
+            ElevatedCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .clickable { imagePickerLauncher.launch("image/*") },
+                shape = MaterialTheme.shapes.medium
             ) {
-                Text("Select Image")
+                if (imageUri == null) {
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "Tap to Select Image",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    AsyncImage(
+                        model = imageUri,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
 
             Spacer(Modifier.height(16.dp))
 
-            // DESCRIPTION INPUT
+            // DESCRIPTION WITH CHARACTER LIMIT
             OutlinedTextField(
                 value = description,
-                onValueChange = { description = it },
-                label = { Text("Memory Description") },
-                modifier = Modifier.fillMaxWidth()
+                onValueChange = { if (it.length <= maxChars) description = it },
+                label = { Text("Description") },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 10,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+
+                    focusedIndicatorColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    unfocusedIndicatorColor = MaterialTheme.colorScheme.outline,
+
+                    focusedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                )
             )
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(8.dp))
+
+            // Character Counter
+            Text(
+                text = "${description.length} / $maxChars characters",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
             // ERROR MESSAGE
             errorMessage?.let {
+                Spacer(Modifier.height(12.dp))
                 Text(
                     text = it,
                     color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(bottom = 12.dp)
+                    style = MaterialTheme.typography.bodyMedium
                 )
-            }
-
-            // UPLOAD BUTTON
-            Button(
-                onClick = {
-                    if (description.isBlank() || imageUri == null) {
-                        errorMessage = "Please select an image and enter a description."
-                        return@Button
-                    }
-
-                    val userId = FirebaseAuth.getInstance().currentUser!!.uid
-
-                    isUploading = true
-                    errorMessage = null
-
-                    coroutineScope.launch {
-                        try {
-                            // 1. Upload image to Firebase Storage
-                            val imageUrl = memoryRepo.uploadMemoryImage(
-                                eventId = eventId,
-                                userId = userId,
-                                imageUri = imageUri!!
-                            )
-
-                            // 2. Create memory document in Firestore
-                            memoryRepo.createMemory(
-                                eventId = eventId,
-                                userId = userId,
-                                description = description,
-                                imageUrl = imageUrl
-                            )
-
-                            // 3. Add this event to the user's attended list
-                            userRepo.addEventToAttended(eventId)
-
-                            // 4. Navigate back to Memory Wall
-                            navController.popBackStack()
-
-                        } catch (e: Exception) {
-                            errorMessage = e.message ?: "Failed to upload memory."
-                        } finally {
-                            isUploading = false
-                        }
-                    }
-                },
-                enabled = !isUploading,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (isUploading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text("Upload Memory")
-                }
             }
         }
     }

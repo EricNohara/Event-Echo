@@ -53,9 +53,6 @@ fun EditProfileScreen(
     }
 
     Scaffold(
-        topBar = {
-            SimpleTopBar()
-        },
         bottomBar = {
             BottomActionBar(
                 onCancel = { navController.popBackStack() },
@@ -101,28 +98,6 @@ fun EditProfileScreen(
             Spacer(Modifier.height(90.dp)) // leave room above bottom buttons
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SimpleTopBar() {
-    TopAppBar(
-        title = {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "Edit Profile",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.background
-        )
-    )
 }
 
 @Composable

@@ -63,24 +63,10 @@ fun SavedEventsScreen(
                 }
 
                 else -> {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                "Saved Events",
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        EventGrid(
-                            navController = navController,
-                            events = savedEvents
-                        )
-                    }
+                    EventGrid(
+                        navController = navController,
+                        events = savedEvents
+                    )
                 }
             }
         }

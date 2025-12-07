@@ -74,26 +74,10 @@ fun AttendedEventsScreen(
                 }
 
                 else -> {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                "Events You've Attended",
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        EventGrid(
-                            navController = navController,
-                            events = attendedEvents
-                        )
-                    }
+                    EventGrid(
+                        navController = navController,
+                        events = attendedEvents
+                    )
                 }
             }
         }

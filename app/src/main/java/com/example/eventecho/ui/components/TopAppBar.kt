@@ -44,10 +44,22 @@ fun TopBar(
             currentRoute == Routes.AttendedEvents.route ||
             currentRoute == Routes.MemoryView.route
 
+    val overrideTitle = when (currentRoute) {
+        Routes.AddToMemoryWall.route -> "Add Memory"
+        Routes.MemoryWall.route -> "Memory Wall"
+        Routes.EditProfile.route -> "Edit Profile"
+        Routes.CreatedEvents.route -> "Events You Created"
+        Routes.AttendedEvents.route -> "Attended Events"
+        Routes.SavedEvents.route -> "Saved Events"
+        Routes.MemoryView.route -> "Memory Details"
+        Routes.EventDetail.route -> "Event Details"
+        else -> "EventEcho"  // default global title
+    }
+
     TopAppBar(
         title = {
             Text(
-                "EventEcho",
+                overrideTitle,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimary
             )
