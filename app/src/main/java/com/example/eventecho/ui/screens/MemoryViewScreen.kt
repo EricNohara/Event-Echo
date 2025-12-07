@@ -5,21 +5,24 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.filled.ThumbDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.eventecho.ui.viewmodels.MemoryWallViewModel
-import com.example.eventecho.ui.viewmodels.MemoryWallViewModelFactory
+import com.example.eventecho.ui.viewmodels.MemoryViewModel
+import com.example.eventecho.ui.viewmodels.MemoryViewModelFactory
 import com.example.eventecho.data.firebase.MemoryRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import androidx.compose.foundation.shape.CircleShape
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,25 +33,23 @@ fun MemoryViewScreen(
 ) {
     val scrollState = rememberScrollState()
 
-    // Repo + VM
+    // Repo + correct VM
     val repo = remember {
         MemoryRepository(
             db = FirebaseFirestore.getInstance(),
             storage = FirebaseStorage.getInstance()
         )
     }
-    val viewModel: MemoryWallViewModel = viewModel(
-        factory = MemoryWallViewModelFactory(repo)
+
+    val viewModel: MemoryViewModel = viewModel(
+        factory = MemoryViewModelFactory(repo)
     )
 
-    val memories by viewModel.memories.collectAsState()
+    val memoryWithUser by viewModel.memory.collectAsState(null)
 
-    // Load all memories for the event
-    LaunchedEffect(eventId) {
-        viewModel.loadMemories(eventId)
+    LaunchedEffect(eventId, memoryOwnerId) {
+        viewModel.loadSingleMemory(eventId, memoryOwnerId)
     }
-
-    val memory = memories.find { it.userId == memoryOwnerId }
 
     Scaffold(
         topBar = {
@@ -56,80 +57,82 @@ fun MemoryViewScreen(
                 title = { Text("Memory") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
         }
     ) { padding ->
 
-        if (memory == null) {
-            Box(
-                Modifier
-                    .padding(padding)
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
+        if (memoryWithUser == null) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("Memory not found.")
             }
             return@Scaffold
         }
 
-        val currentUserId = FirebaseAuth.getInstance().currentUser!!.uid
-        val hasUpvoted = memory.upvotedBy.contains(currentUserId)
+        val memory = memoryWithUser!!.memory
+        val username = memoryWithUser!!.username
+        val profilePic = memoryWithUser!!.profilePicUrl
+
+        val userId = FirebaseAuth.getInstance().currentUser!!.uid
+        val hasUpvoted = memory.upvotedBy.contains(userId)
 
         Column(
-            modifier = Modifier
+            Modifier
                 .padding(padding)
                 .padding(16.dp)
                 .verticalScroll(scrollState)
-                .fillMaxSize()
         ) {
 
-            // Full-size image
             AsyncImage(
                 model = memory.imageUrl,
-                contentDescription = "Memory Image",
+                contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(350.dp)
             )
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(20.dp))
 
-            Text(
-                text = memory.description,
-                style = MaterialTheme.typography.bodyLarge
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            Text(
-                text = "Posted by: ${memory.userId}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                AsyncImage(
+                    model = profilePic,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp).clip(CircleShape)
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(username, style = MaterialTheme.typography.titleMedium)
+            }
 
             Spacer(Modifier.height(20.dp))
 
-            // Upvote Count
-            Text(
-                text = "Upvotes: ${memory.upvoteCount}",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
+            Text(memory.description, style = MaterialTheme.typography.bodyLarge)
 
             Spacer(Modifier.height(20.dp))
 
-            // UPVOTE / REMOVE UPVOTE button
-            Button(
-                modifier = Modifier.fillMaxWidth(),
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.ThumbUp, contentDescription = null)
+                Spacer(Modifier.width(6.dp))
+                Text("${memory.upvoteCount} upvotes")
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            IconButton(
+                modifier = Modifier.align(Alignment.CenterHorizontally),
                 onClick = {
                     viewModel.toggleUpvote(eventId, memoryOwnerId)
                 }
             ) {
-                Text(if (hasUpvoted) "Remove Upvote 👎" else "Upvote 👍")
+                Icon(
+                    if (hasUpvoted) Icons.Default.ThumbDown else Icons.Default.ThumbUp,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(42.dp)
+                )
             }
         }
     }
 }
+

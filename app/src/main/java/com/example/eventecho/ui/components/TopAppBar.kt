@@ -41,7 +41,8 @@ fun TopBar(
             currentRoute == Routes.SavedEvents.route ||
             currentRoute == Routes.EditProfile.route ||
             currentRoute == Routes.CreatedEvents.route ||
-            currentRoute == Routes.AttendedEvents.route
+            currentRoute == Routes.AttendedEvents.route ||
+            currentRoute == Routes.MemoryView.route
 
     TopAppBar(
         title = {

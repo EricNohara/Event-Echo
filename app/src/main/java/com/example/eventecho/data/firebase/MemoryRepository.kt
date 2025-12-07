@@ -72,6 +72,19 @@ class MemoryRepository(
         return snap.documents.mapNotNull { it.toMemory() }
     }
 
+    // get a single memory
+    suspend fun getMemory(eventId: String, userId: String): Memory? {
+        val doc = db.collection("events")
+            .document(eventId)
+            .collection("memories")
+            .document(userId)
+            .get()
+            .await()
+
+        if (!doc.exists()) return null
+        return doc.toMemory()
+    }
+
     // Upvote a memory
     suspend fun toggleUpvote(eventId: String, memoryOwnerId: String, voterId: String) {
         val memoryRef = db.collection("events")

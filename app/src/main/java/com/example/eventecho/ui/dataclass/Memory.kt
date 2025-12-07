@@ -13,6 +13,12 @@ data class Memory(
     val updatedAt: Timestamp? = null
 )
 
+data class MemoryWithUser(
+    val memory: Memory,
+    val username: String,
+    val profilePicUrl: String?
+)
+
 fun DocumentSnapshot.toMemory(): Memory? {
     return try {
         Memory(
