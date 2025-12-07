@@ -45,6 +45,7 @@ class ProfileViewModel(
                 eventsAttended = (data["eventsAttended"] as? List<*>)?.size ?: 0,
                 eventsCreated = (data["eventsCreated"] as? List<*>)?.size ?: 0,
                 favorites = (data["savedEvents"] as? List<*>)?.size ?: 0,
+                totalUpvotesReceived = (data["totalUpvotesReceived"] as? Long)?.toInt() ?: 0,
                 memberSince = (data["createdAt"] as? Timestamp)?.toDate()?.let { date ->
                     SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(date)
                 } ?: ""

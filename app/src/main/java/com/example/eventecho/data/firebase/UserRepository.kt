@@ -6,6 +6,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
+import kotlinx.coroutines.tasks.await
 
 class UserRepository {
 
@@ -21,6 +22,7 @@ class UserRepository {
             "bio" to "",
             "profilePicUrl" to null,
             "createdAt" to FieldValue.serverTimestamp(),
+            "totalUpvotesReceived" to 0,
             "eventsAttended" to emptyList<String>(),
             "eventsCreated" to emptyList<String>(),
             "savedEvents" to emptyList<String>(),
@@ -69,5 +71,30 @@ class UserRepository {
             }
             .addOnSuccessListener { uri -> onSuccess(uri.toString()) }
             .addOnFailureListener(onError)
+    }
+
+    // add event to attended events - used after posting a memory
+    suspend fun addEventToAttended(eventId: String) {
+        val uid = FirebaseAuth.getInstance().currentUser!!.uid
+
+        Firebase.firestore.collection("users")
+            .document(uid)
+            .update("eventsAttended", FieldValue.arrayUnion(eventId))
+            .await()
+    }
+
+    // get events user attended
+    suspend fun getEventsAttended(): List<String> {
+        val uid = FirebaseAuth.getInstance().currentUser!!.uid
+        val doc = db.collection("users").document(uid).get().await()
+        return doc.get("eventsAttended") as? List<String> ?: emptyList()
+    }
+
+    // update total number of upvotes
+    suspend fun updateTotalUpvotes(userId: String, newTotal: Int) {
+        db.collection("users")
+            .document(userId)
+            .update("totalUpvotesReceived", newTotal)
+            .await()
     }
 }

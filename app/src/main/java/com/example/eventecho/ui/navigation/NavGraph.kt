@@ -67,9 +67,9 @@ fun AppNavGraph(navController: NavHostController) {
             CreatedEventsScreen(navController, repo)
         }
 
-//        composable(Routes.AttendedEvents.route) {
-//            AttendedEventsScreen(navController, repo)
-//        }
+        composable(Routes.AttendedEvents.route) {
+            AttendedEventsScreen(navController, repo)
+        }
 
         composable(Routes.MapFullScreen.route) {
             MapFullScreen(navController, mapViewModel)
@@ -115,6 +115,23 @@ fun AppNavGraph(navController: NavHostController) {
         ) { backStackEntry ->
             val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
             AddToMemoryWallScreen(navController, eventId)
+        }
+
+        composable(
+            route = Routes.MemoryView.route,
+            arguments = listOf(
+                navArgument("eventId") { type = NavType.StringType },
+                navArgument("userId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+
+            MemoryViewScreen(
+                navController = navController,
+                eventId = eventId,
+                memoryOwnerId = userId
+            )
         }
     }
 }
