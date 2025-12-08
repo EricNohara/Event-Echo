@@ -94,10 +94,9 @@ fun ProfileScreen(
                 }
 
                 // Recent Events Header
-                // Recent Events Header
                 item {
                     SectionTitle("Recent Events")
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
 
                 // Recent Events Grid
@@ -202,8 +201,6 @@ fun SettingsSection(
     }
 }
 
-
-
 @Composable
 fun ProfileHeader(
     username: String,
@@ -212,58 +209,77 @@ fun ProfileHeader(
     memberSince: String
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
     ) {
-
-        // Profile picture
-        Box(
-            modifier = Modifier
-                .size(110.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-            contentAlignment = Alignment.Center
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (profilePicUrl != null) {
-                AsyncImage(
-                    model = profilePicUrl,
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier.clip(CircleShape)
+
+            // Profile Image
+            Box(
+                modifier = Modifier
+                    .size(90.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                if (profilePicUrl != null) {
+                    AsyncImage(
+                        model = profilePicUrl,
+                        contentDescription = "Profile Picture",
+                        modifier = Modifier.clip(CircleShape)
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Group,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(50.dp)
+                    )
+                }
+            }
+
+            Spacer(Modifier.width(16.dp))
+
+            // Name + Member Since (vertical)
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = username,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
                 )
-            } else {
-                Icon(
-                    imageVector = Icons.Default.Group,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(64.dp)
-                )
+
+                Spacer(Modifier.height(6.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.CalendarToday,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = "Member since $memberSince",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 13.sp
+                    )
+                }
             }
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(20.dp))
 
-        // Username
-        Text(
-            text = username,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(Modifier.height(16.dp))
-
-        // Member Since
-        MemberSinceFooter(date = memberSince)
-
-        Spacer(Modifier.height(16.dp))
-
-        // Bio Card
+        // -------- BIO CARD --------
         Card(
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant
             ),
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text(
                 text = if (bio.isNotBlank()) bio else "No bio added.",
