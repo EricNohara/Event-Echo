@@ -78,6 +78,8 @@ dependencies {
     implementation(libs.androidx.ui.test.junit4)
     implementation(libs.androidx.rules)
     implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.material3.adaptive)
+
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

@@ -6,11 +6,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.calculateStandardPaneScaffoldDirective
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,6 +36,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun ProfileScreen(
     navController: NavController,
@@ -43,81 +49,142 @@ fun ProfileScreen(
     // READ DARK MODE FROM DATASTORE
     val isDarkMode by context.readDarkMode().collectAsState(initial = false)
 
+    //Determine if Tablet Mode
+    val adaptiveInfo = currentWindowAdaptiveInfo()
+    val scaffoldDirective = calculateStandardPaneScaffoldDirective(adaptiveInfo)
+    val isTablet = scaffoldDirective.maxHorizontalPartitions > 1
+
     Scaffold { padding ->
         if (uiState.isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimaryContainer)
             }
         } else {
-            LazyColumn(
+            // 2. LAYOUT LOGIC
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(horizontal = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(horizontal = 16.dp)
             ) {
-                // Header
-                item {
-                    ProfileHeader(
-                        username = uiState.user.username,
-                        bio = uiState.user.bio,
-                        profilePicUrl = uiState.user.profilePicUrl,
-                        memberSince = uiState.user.memberSince
-                    )
-                    Spacer(modifier = Modifier.height(28.dp))
-                }
+                if (isTablet) {
+                    // TABLET LAYOUT
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
+                        // Left : Info
+                        Column(
+                            modifier = Modifier
+                                .weight(0.4f)
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            ProfileInfoContent(
+                                user = uiState.user,
+                                isDarkMode = isDarkMode,
+                                onToggleDarkMode = { scope.launch { context.setDarkMode(it) } },
+                                onEditClick = { navController.navigate(Routes.EditProfile.route) },
+                                onStatClick = { route -> navController.navigate(route) }
+                            )
+                        }
 
-                // SETTINGS SECTION (Dark Mode toggle)
-                item {
-                    SettingsSection(
-                        isDark = isDarkMode,
-                        onToggle = { enabled ->
-                            scope.launch { context.setDarkMode(enabled) }
-                        },
-                        onEditClick = { navController.navigate(Routes.EditProfile.route) }
-                    )
-                    Spacer(modifier = Modifier.height(28.dp))
-                }
+                        // Right : Events
+                        Column(
+                            modifier = Modifier
+                                .weight(0.6f)
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            RecentEventsContent(
+                                events = uiState.recentEvents,
+                                navController = navController
+                            )
+                        }
+                    }
+                } else {
+                    //  PHONE LAYOUT
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        ProfileInfoContent(
+                            user = uiState.user,
+                            isDarkMode = isDarkMode,
+                            onToggleDarkMode = { scope.launch { context.setDarkMode(it) } },
+                            onEditClick = { navController.navigate(Routes.EditProfile.route) },
+                            onStatClick = { route -> navController.navigate(route) }
+                        )
 
-                // Stats
-                item {
-                    StatsRow(
-                        attended = uiState.user.eventsAttended,
-                        created = uiState.user.eventsCreated,
-                        favorites = uiState.user.favorites,
-                        totalUpvotes = uiState.user.totalUpvotesReceived,
-                        onAttendedClick = {navController.navigate("attended_events")},
-                        onFavoritesClick = { navController.navigate("saved_events") },
-                        onCreatedClick = { navController.navigate("created_events") }
-                    )
-                    Spacer(modifier = Modifier.height(28.dp))
-                }
-
-                // Recent Events Header
-                item {
-                    SectionTitle("Recent Events")
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
-
-                // Recent Events Grid
-                item {
-                    EventGridNonScrollable(
-                        navController = navController,
-                        events = uiState.recentEvents
-                    )
-                }
-
-                if (uiState.recentEvents.isEmpty()) {
-                    item {
-                        Text(
-                            text = "No recent events",
-                            color = Color.Gray,
-                            fontSize = 14.sp,
-                            modifier = Modifier.padding(16.dp)
+                        RecentEventsContent(
+                            events = uiState.recentEvents,
+                            navController = navController
                         )
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun ProfileInfoContent(
+    user: com.example.eventecho.ui.dataclass.ProfileUser,
+    isDarkMode: Boolean,
+    onToggleDarkMode: (Boolean) -> Unit,
+    onEditClick: () -> Unit,
+    onStatClick: (String) -> Unit
+) {
+    Column {
+        ProfileHeader(
+            username = user.username,
+            bio = user.bio,
+            profilePicUrl = user.profilePicUrl,
+            memberSince = user.memberSince
+        )
+        Spacer(modifier = Modifier.height(28.dp))
+
+        SettingsSection(
+            isDark = isDarkMode,
+            onToggle = onToggleDarkMode,
+            onEditClick = onEditClick
+        )
+        Spacer(modifier = Modifier.height(28.dp))
+
+        StatsRow(
+            attended = user.eventsAttended,
+            created = user.eventsCreated,
+            favorites = user.favorites,
+            totalUpvotes = user.totalUpvotesReceived,
+            onAttendedClick = { onStatClick("attended_events") },
+            onFavoritesClick = { onStatClick("saved_events") },
+            onCreatedClick = { onStatClick("created_events") }
+        )
+        Spacer(modifier = Modifier.height(28.dp))
+    }
+}
+
+@Composable
+fun RecentEventsContent(
+    events: List<com.example.eventecho.ui.dataclass.Event>,
+    navController: NavController
+) {
+    Column {
+        SectionTitle("Recent Events")
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (events.isEmpty()) {
+            Text(
+                text = "No recent events",
+                color = Color.Gray,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
+        } else {
+            EventGridNonScrollable(
+                navController = navController,
+                events = events
+            )
         }
     }
 }
