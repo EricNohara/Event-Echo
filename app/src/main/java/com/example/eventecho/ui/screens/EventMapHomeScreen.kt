@@ -32,6 +32,7 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.rememberCameraPositionState
 import java.time.LocalDate
+import com.example.eventecho.ui.dataclass.Event
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -56,16 +57,13 @@ fun EventMapHomeScreen(
         }
     }
 
-    // LOCATION PERMISSIONS
+    // --- LOCATION PERMISSIONS ---
     val fusedLocation = remember { LocationServices.getFusedLocationProviderClient(context) }
     var permissionGranted by remember { mutableStateOf(false) }
 
     val requestPermissionLauncher =
-        rememberLauncherForActivityResult(
-            ActivityResultContracts.RequestMultiplePermissions()
-        ) { perms ->
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { perms ->
             permissionGranted = perms[Manifest.permission.ACCESS_FINE_LOCATION] == true
-            Log.d("LocationPerm", "Permission result: $permissionGranted")
         }
 
     LaunchedEffect(Unit) {
@@ -73,10 +71,7 @@ fun EventMapHomeScreen(
             context, Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
 
-        Log.d("LocationPerm", "Initial permission granted: $granted")
-
         if (!granted) {
-            Log.d("LocationPerm", "Requesting location permissions…")
             requestPermissionLauncher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
@@ -85,27 +80,20 @@ fun EventMapHomeScreen(
             )
         } else {
             permissionGranted = true
-            Log.d("LocationPerm", "Permission already granted.")
         }
     }
 
-    // GPS FETCH
+    // --- FETCH GPS LOCATION ---
     fun fetchLocation() {
-        if (!permissionGranted) {
-            Log.d("LocationFetch", "fetchLocation called but permission NOT granted")
-            return
-        }
+        if (!permissionGranted) return
 
         fusedLocation.lastLocation.addOnSuccessListener { loc ->
             if (loc != null) {
                 val pos = LatLng(loc.latitude, loc.longitude)
-                Log.d("LocationFetch", "LastLocation success: $pos")
                 viewModel.updateUserLocation(pos)
                 cameraPositionState.position = CameraPosition.fromLatLngZoom(pos, 14f)
                 return@addOnSuccessListener
             }
-
-            Log.d("LocationFetch", "LastLocation = null → requesting fresh update")
 
             val request = LocationRequest.Builder(
                 Priority.PRIORITY_HIGH_ACCURACY, 1500L
@@ -117,7 +105,6 @@ fun EventMapHomeScreen(
                     override fun onLocationResult(result: LocationResult) {
                         val fresh = result.lastLocation ?: return
                         val pos = LatLng(fresh.latitude, fresh.longitude)
-                        Log.d("LocationFetch", "Fresh GPS result: $pos")
                         viewModel.updateUserLocation(pos)
                         cameraPositionState.position =
                             CameraPosition.fromLatLngZoom(pos, 14f)
@@ -130,14 +117,12 @@ fun EventMapHomeScreen(
     }
 
     LaunchedEffect(permissionGranted) {
-        Log.d("LocationPerm", "permissionGranted changed → $permissionGranted")
         if (permissionGranted) fetchLocation()
     }
 
-    // SEARCH BAR CAMERA MOVE (ONLY TOP BAR)
+    // --- CAMERA MOVE SEARCH ---
     LaunchedEffect(cameraMove) {
         cameraMove?.let {
-            Log.d("CameraMove", "CameraMove triggered with: $it")
             if (mapLoaded) {
                 cameraPositionState.animate(
                     update = CameraUpdateFactory.newLatLngZoom(it, 14f),
@@ -148,18 +133,27 @@ fun EventMapHomeScreen(
         }
     }
 
-    // FILTER STATE (Dropdown)
-    val radiusState = remember { mutableStateOf(viewModel.radiusKm) }
-    val startDateState = remember { mutableStateOf(viewModel.selectedDate) }
-    val endDateState = remember { mutableStateOf(viewModel.selectedDate) }
-    val searchQuery = remember { mutableStateOf("") }
+    // --- FILTER STATE (UI State Only) ---
+    val radiusState = remember { mutableStateOf<Int>(viewModel.radiusKm) }
+
+    val startDateState = remember {
+        mutableStateOf<LocalDate>(viewModel.selectedStartDate ?: LocalDate.now())
+    }
+
+    val endDateState = remember {
+        mutableStateOf<LocalDate>(viewModel.selectedEndDate ?: LocalDate.now().plusDays(3))
+    }
+
+    val searchQuery = remember { mutableStateOf<String>("") }
+
     var filterMenuExpanded by remember { mutableStateOf(false) }
 
-    // FILTER CHANGES - ZOOM + REFRESH
+    // --- FILTER EFFECT: radius / startDate / endDate ---
     LaunchedEffect(radiusState.value, startDateState.value, endDateState.value) {
 
         viewModel.radiusKm = radiusState.value
-        viewModel.selectedDate = startDateState.value
+        viewModel.selectedStartDate = startDateState.value
+        viewModel.selectedEndDate = endDateState.value
 
         val center = cameraPositionState.position.target
 
@@ -174,27 +168,27 @@ fun EventMapHomeScreen(
         viewModel.onMapCameraIdle(center)
     }
 
-    // MAP CAMERA IDLE
+    // --- MAP CAMERA IDLE EVENT ---
     LaunchedEffect(cameraPositionState.isMoving) {
         if (!cameraPositionState.isMoving) {
             viewModel.onMapCameraIdle(cameraPositionState.position.target)
         }
     }
 
-    // SEARCH BAR BELOW MAP — CLIENT FILTER ONLY
-    val filteredEvents by remember(events, searchQuery.value) {
-        derivedStateOf {
+    // --- SEARCH FILTER FOR LIST ONLY ---
+    val filteredEvents by remember(events, searchQuery) {
+        derivedStateOf<List<Event>> {
             val q = searchQuery.value.trim().lowercase()
             if (q.isBlank()) events
             else events.filter { it.title.lowercase().contains(q) }
         }
     }
 
-    // UI
+    // --- UI ---
     Scaffold {
-        Column(Modifier.fillMaxWidth()) {
+        Column(Modifier.fillMaxSize()) {
 
-            // MAP
+            // MAP VIEW
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -211,9 +205,7 @@ fun EventMapHomeScreen(
                 )
 
                 Box(Modifier.align(Alignment.TopCenter)) {
-                    MapSearchBar { query ->
-                        viewModel.performSearch(query, context)
-                    }
+                    MapSearchBar { query -> viewModel.performSearch(query, context) }
                 }
 
                 IconButton(
@@ -221,7 +213,10 @@ fun EventMapHomeScreen(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(top = 90.dp, end = 16.dp)
-                        .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.medium)
+                        .background(
+                            MaterialTheme.colorScheme.surface,
+                            MaterialTheme.shapes.medium
+                        )
                 ) {
                     Icon(Icons.Default.MyLocation, "Current Location")
                 }
@@ -248,7 +243,7 @@ fun EventMapHomeScreen(
                 onExpandMenu = { filterMenuExpanded = it }
             )
 
-            // EVENT GRID
+            // EVENT LIST
             EventGrid(
                 navController = navController,
                 events = filteredEvents
@@ -256,6 +251,7 @@ fun EventMapHomeScreen(
         }
     }
 }
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable

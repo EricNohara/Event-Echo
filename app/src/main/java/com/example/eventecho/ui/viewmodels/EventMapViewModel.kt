@@ -42,19 +42,15 @@ class EventMapViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    var selectedDate: LocalDate = LocalDate.now()
+    // --- Filters ---
     var radiusKm: Int = 50
+
+    var selectedStartDate: LocalDate? = null
+    var selectedEndDate: LocalDate? = null
+
     private var lastCenter: LatLng? = null
 
-    var radius: Int
-        get() = radiusKm
-        set(value) { radiusKm = value }
-
-    var startDateTime: String = ""
-
-
     // CAMERA IDLE → LOAD FIRESTORE EVENTS
-
     @RequiresApi(Build.VERSION_CODES.O)
     fun onMapCameraIdle(center: LatLng) {
         lastCenter = center
@@ -69,38 +65,38 @@ class EventMapViewModel(
         }
     }
 
-
     // FULL PIPELINE: Ticketmaster → Firestore → Filter → Pins
-
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun refreshEvents(center: LatLng) {
         try {
-            // 1. Convert to geohash for Ticketmaster
+            // 1. Create geohash
             val geoHash = GeoHash.withCharacterPrecision(
                 center.latitude,
                 center.longitude,
                 6
             ).toBase32()
 
-            // 2. Current time in ISO format
-            val dateIso = ZonedDateTime.now(ZoneOffset.UTC)
+            // 2. Current time in ISO
+            val nowIso = ZonedDateTime.now(ZoneOffset.UTC)
                 .withNano(0)
                 .format(DateTimeFormatter.ISO_INSTANT)
 
             // 3. Sync Ticketmaster → Firestore
             repo.syncTicketmasterEvents(
                 geoPoint = geoHash,
-                startDateTime = dateIso,
+                startDateTime = nowIso,
                 radius = radiusKm.toString()
             )
 
-            // 4. Load all Firestore events
+            // 4. Load Firestore events
             val allEvents = repo.getEventsFromFirestore()
 
-            // 5. Filter events by radius + date
-            val filtered = allEvents.filter { isEventIncluded(it, center) }
+            // 5. Apply radius + date filtering
+            val filtered = allEvents
+                .filter { isEventIncluded(it, center) }
+                .sortedBy { LocalDate.parse(it.date) }
 
-            // 6. Update Compose State
+            // 6. Push to UI
             _events.value = filtered
 
             _mapPins.value = filtered.map {
@@ -120,32 +116,38 @@ class EventMapViewModel(
     }
 
 
-    // FILTERING HELPER
-
+    // --- FILTERING ---
     private fun isEventIncluded(event: Event, center: LatLng): Boolean {
-        // Distance filter
+        // RADIUS FILTER
         val dist = FloatArray(1)
         android.location.Location.distanceBetween(
             center.latitude, center.longitude,
             event.latitude, event.longitude,
             dist
         )
-
         val km = dist[0] / 1000.0
         if (km > radiusKm) return false
 
-        // Date filter
-        return try {
+        // DATE RANGE FILTER
+        try {
             val eventDate = LocalDate.parse(event.date)
-            !eventDate.isBefore(selectedDate)
+
+            val afterStart = selectedStartDate?.let { eventDate >= it } ?: true
+            val beforeEnd = selectedEndDate?.let { eventDate <= it } ?: true
+
+            if (!afterStart) return false
+            if (!beforeEnd) return false
+
         } catch (e: Exception) {
-            true
+            // If the date is invalid, exclude it so it doesn't break filtering
+            return false
         }
+
+        return true
     }
 
 
-    // SEARCH BAR → Geocoder → Move Camera
-
+    // --- SEARCH BAR ---
     fun performSearch(query: String, context: Context) {
         val trimmed = query.trim()
         if (trimmed.isBlank()) return
@@ -167,9 +169,7 @@ class EventMapViewModel(
         }
     }
 
-
-    // GPS & CAMERA MOVEMENT STATE
-
+    // --- GPS & CAMERA EVENTS ---
     fun updateUserLocation(location: LatLng) {
         _userLocation.value = location
     }
