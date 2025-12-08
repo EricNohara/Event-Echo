@@ -219,7 +219,7 @@ fun ProfileHeader(
             // Profile Image
             Box(
                 modifier = Modifier
-                    .size(90.dp)
+                    .size(100.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
@@ -271,7 +271,7 @@ fun ProfileHeader(
             }
         }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(16.dp))
 
         // -------- BIO CARD --------
         Card(
@@ -281,6 +281,13 @@ fun ProfileHeader(
             ),
             modifier = Modifier.fillMaxWidth()
         ) {
+            Text(
+                text = "Bio",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp)
+            )
             Text(
                 text = if (bio.isNotBlank()) bio else "No bio added.",
                 style = MaterialTheme.typography.bodyMedium,
