@@ -24,6 +24,12 @@ import com.example.eventecho.ui.theme.EventEchoTheme
 import com.example.eventecho.data.datastore.readDarkMode
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.eventecho.ui.viewmodels.UserViewModel
+import com.example.eventecho.ui.viewmodels.UserViewModelFactory
+import com.example.eventecho.data.firebase.UserRepository
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -51,6 +57,15 @@ fun EventEchoApp() {
 
     val systemUiController = rememberSystemUiController()
 
+    val userRepo = remember { UserRepository() }
+
+    val userViewModel: UserViewModel = viewModel(
+        factory = UserViewModelFactory(userRepo)
+    )
+
+    val userState by userViewModel.uiState.collectAsState()
+
+
     EventEchoTheme(darkTheme = isDarkMode) {
 
         val bgColor = MaterialTheme.colorScheme.background
@@ -72,6 +87,7 @@ fun EventEchoApp() {
                 TopBar(
                     navController = navController,
                     currentRoute = currentRoute,
+                    profilePicUrl = userState.profilePicUrl,
                     onBackClick = { navController.popBackStack() }
                 )
             },
