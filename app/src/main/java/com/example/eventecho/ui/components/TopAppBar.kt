@@ -53,6 +53,7 @@ fun TopBar(
         Routes.SavedEvents.route -> "Saved Events"
         Routes.MemoryView.route -> "Memory Details"
         Routes.EventDetail.route -> "Event Details"
+        Routes.CreateEvent.route -> "Create Event"
         else -> "EventEcho"  // default global title
     }
 

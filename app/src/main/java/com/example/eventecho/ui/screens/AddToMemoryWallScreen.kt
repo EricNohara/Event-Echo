@@ -1,6 +1,7 @@
 package com.example.eventecho.ui.screens
 
 import android.net.Uri
+import android.os.Environment
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -10,8 +11,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.eventecho.data.firebase.MemoryRepository
@@ -20,6 +21,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.launch
+import com.example.eventecho.ui.components.LimitedTextField
+import com.example.eventecho.ui.components.ImageSelectorCard
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,22 +42,49 @@ fun AddToMemoryWallScreen(
 
     var description by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
     var isUploading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    val context = androidx.compose.ui.platform.LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
     val maxChars = 400
 
+    /** Create a temporary file and return its URI */
+    fun createImageUri(): Uri {
+        val imageFile = File(
+            context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+            "memory_${System.currentTimeMillis()}.jpg"
+        )
+        return FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.provider",
+            imageFile
+        )
+    }
+
+    /** Camera launcher */
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && cameraImageUri != null) {
+            imageUri = cameraImageUri
+        }
+    }
+
+    /** Gallery launcher */
     val imagePickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri ->
-        imageUri = uri
+        if (uri != null) {
+            imageUri = uri
+        }
     }
 
     Scaffold(
         bottomBar = {
-            Surface (color = MaterialTheme.colorScheme.background) {
+            Surface(color = MaterialTheme.colorScheme.background) {
                 Button(
                     onClick = {
                         val userId = FirebaseAuth.getInstance().currentUser!!.uid
@@ -62,7 +93,7 @@ fun AddToMemoryWallScreen(
 
                         coroutineScope.launch {
                             try {
-                                val imageUrl = memoryRepo.uploadMemoryImage(
+                                val url = memoryRepo.uploadMemoryImage(
                                     eventId, userId, imageUri!!
                                 )
 
@@ -70,7 +101,7 @@ fun AddToMemoryWallScreen(
                                     eventId = eventId,
                                     userId = userId,
                                     description = description,
-                                    imageUrl = imageUrl
+                                    imageUrl = url
                                 )
 
                                 userRepo.addEventToAttended(eventId)
@@ -87,9 +118,9 @@ fun AddToMemoryWallScreen(
                         .fillMaxWidth()
                         .padding(16.dp),
                     enabled = !isUploading &&
+                            imageUri != null &&
                             description.isNotBlank() &&
-                            description.length <= maxChars &&
-                            imageUri != null
+                            description.length <= maxChars
                 ) {
                     if (isUploading) {
                         CircularProgressIndicator(
@@ -110,68 +141,30 @@ fun AddToMemoryWallScreen(
                 .padding(horizontal = 16.dp)
                 .fillMaxSize()
         ) {
-            // IMAGE SELECTOR
-            ElevatedCard(
+            // IMAGE SELECTOR WITH CAMERA SUPPORT
+            ImageSelectorCard(
+                imageUri = imageUri,
+                isLoading = isUploading,
+                onGalleryClick = { imagePickerLauncher.launch("image/*") },
+                onCameraClick = {
+                    val newUri = createImageUri()
+                    cameraImageUri = newUri
+                    takePictureLauncher.launch(newUri)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(220.dp)
-                    .clickable { imagePickerLauncher.launch("image/*") },
-                shape = MaterialTheme.shapes.medium
-            ) {
-                if (imageUri == null) {
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "Tap to Select Image",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                } else {
-                    AsyncImage(
-                        model = imageUri,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            // DESCRIPTION WITH CHARACTER LIMIT
-            OutlinedTextField(
-                value = description,
-                onValueChange = { if (it.length <= maxChars) description = it },
-                label = { Text("Description") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 10,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-
-                    focusedIndicatorColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    unfocusedIndicatorColor = MaterialTheme.colorScheme.outline,
-
-                    focusedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                )
             )
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
 
-            // Character Counter
-            Text(
-                text = "${description.length} / $maxChars characters",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            // DESCRIPTION WITH CHAR LIMIT
+            LimitedTextField(
+                value = description,
+                onValueChange = { description = it },
+                label = "Description",
+                maxChars = maxChars,
+                minLines = 10,
+                modifier = Modifier.fillMaxWidth()
             )
 
             // ERROR MESSAGE
