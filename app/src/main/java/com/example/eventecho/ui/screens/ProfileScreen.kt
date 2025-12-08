@@ -60,7 +60,6 @@ fun ProfileScreen(
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimaryContainer)
             }
         } else {
-            // 2. LAYOUT LOGIC
             Box(
                 modifier = Modifier
                     .fillMaxSize()
