@@ -31,6 +31,10 @@ import coil.compose.AsyncImage
 import com.example.eventecho.ui.viewmodels.EditProfileViewModel
 import androidx.compose.ui.text.input.ImeAction
 import com.example.eventecho.R
+import com.example.eventecho.ui.components.SimpleTextField
+import com.example.eventecho.ui.components.LimitedTextField
+
+
 
 @Composable
 fun EditProfileScreen(
@@ -81,21 +85,22 @@ fun EditProfileScreen(
 
             Spacer(Modifier.height(28.dp))
 
-            ProfileInput(
-                label = "Display Name",
+            SimpleTextField(
                 value = uiState.username,
-                onChange = viewModel::onUsernameChange
+                onValueChange = viewModel::onUsernameChange,
+                label = "Display Name"
             )
 
-            ProfileInput(
-                label = "Bio",
+            Spacer(Modifier.height(12.dp))
+
+            LimitedTextField(
                 value = uiState.bio,
-                onChange = viewModel::onBioChange,
-                maxLines = 8,
-                minLines = 6
+                onValueChange = viewModel::onBioChange,
+                label = "Bio",
+                maxChars = 300,
+                minLines = 6,
+                modifier = Modifier.fillMaxWidth()
             )
-
-            Spacer(Modifier.height(90.dp)) // leave room above bottom buttons
         }
     }
 }
@@ -145,55 +150,6 @@ fun AvatarSection(profilePicUrl: String?, uploading: Boolean, onClick: () -> Uni
     Spacer(Modifier.height(12.dp))
 
     Text("Click the camera icon to change avatar", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-}
-
-@Composable
-fun ProfileInput(
-    label: String,
-    value: String,
-    onChange: (String) -> Unit,
-    maxLines: Int = 1,
-    minLines: Int = 1
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth() // take full width so it's not centered by parent
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(
-                text = label,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Spacer(Modifier.height(4.dp))
-
-            TextField(
-                value = value,
-                onValueChange = onChange,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp)),
-                maxLines = maxLines,
-                minLines = minLines,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                ),
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = ImeAction.Next
-                )
-            )
-
-            Spacer(Modifier.height(18.dp))
-        }
-    }
 }
 
 @Composable

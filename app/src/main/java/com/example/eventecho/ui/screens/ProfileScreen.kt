@@ -62,15 +62,9 @@ fun ProfileScreen(
                         username = uiState.user.username,
                         bio = uiState.user.bio,
                         profilePicUrl = uiState.user.profilePicUrl,
-                        onEditClick = { navController.navigate(Routes.EditProfile.route) }
+                        memberSince = uiState.user.memberSince
                     )
                     Spacer(modifier = Modifier.height(28.dp))
-                }
-
-                // Member Since
-                item {
-                    MemberSinceFooter(date = uiState.user.memberSince)
-                    Spacer(modifier = Modifier.height(24.dp))
                 }
 
                 // SETTINGS SECTION (Dark Mode toggle)
@@ -79,7 +73,8 @@ fun ProfileScreen(
                         isDark = isDarkMode,
                         onToggle = { enabled ->
                             scope.launch { context.setDarkMode(enabled) }
-                        }
+                        },
+                        onEditClick = { navController.navigate(Routes.EditProfile.route) }
                     )
                     Spacer(modifier = Modifier.height(28.dp))
                 }
@@ -99,10 +94,9 @@ fun ProfileScreen(
                 }
 
                 // Recent Events Header
-                // Recent Events Header
                 item {
                     SectionTitle("Recent Events")
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
 
                 // Recent Events Grid
@@ -131,11 +125,14 @@ fun ProfileScreen(
 @Composable
 fun SettingsSection(
     isDark: Boolean,
-    onToggle: (Boolean) -> Unit
+    onToggle: (Boolean) -> Unit,
+    onEditClick: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -146,8 +143,9 @@ fun SettingsSection(
                 fontWeight = FontWeight.Bold
             )
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(20.dp))
 
+            // DARK MODE TOGGLE
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -155,8 +153,16 @@ fun SettingsSection(
             ) {
 
                 Column {
-                    Text("Dark Mode", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                    Text("Enable app-wide dark theme", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                    Text(
+                        "Dark Mode",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        "Enable app-wide dark theme",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 12.sp
+                    )
                 }
 
                 Switch(
@@ -164,99 +170,129 @@ fun SettingsSection(
                     onCheckedChange = onToggle
                 )
             }
+
+            Spacer(Modifier.height(20.dp))
+
+            // Edit button
+            OutlinedButton(
+                onClick = onEditClick,
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onBackground,
+                ),
+                border = ButtonDefaults.outlinedButtonBorder.copy(
+                    brush = SolidColor(MaterialTheme.colorScheme.onBackground)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit",
+                    tint = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    "Edit Profile",
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
         }
     }
 }
-
 
 @Composable
 fun ProfileHeader(
     username: String,
     bio: String,
     profilePicUrl: String?,
-    onEditClick: () -> Unit
+    memberSince: String
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
     ) {
-
-        // Profile picture
-        Box(
-            modifier = Modifier
-                .size(110.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-            contentAlignment = Alignment.Center
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (profilePicUrl != null) {
-                AsyncImage(
-                    model = profilePicUrl,
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier.clip(CircleShape)
+
+            // Profile Image
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                if (profilePicUrl != null) {
+                    AsyncImage(
+                        model = profilePicUrl,
+                        contentDescription = "Profile Picture",
+                        modifier = Modifier.clip(CircleShape)
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Group,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(50.dp)
+                    )
+                }
+            }
+
+            Spacer(Modifier.width(16.dp))
+
+            // Name + Member Since (vertical)
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = username,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
                 )
-            } else {
-                Icon(
-                    imageVector = Icons.Default.Group,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(64.dp)
-                )
+
+                Spacer(Modifier.height(6.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.CalendarToday,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = "Member since $memberSince",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 13.sp
+                    )
+                }
             }
         }
 
-        Spacer(Modifier.height(12.dp))
-
-        // Username
-        Text(
-            text = username,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold
-        )
-
         Spacer(Modifier.height(16.dp))
 
-        // Bio Card
+        // -------- BIO CARD --------
         Card(
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant
             ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
+            Text(
+                text = "Bio",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp)
+            )
             Text(
                 text = if (bio.isNotBlank()) bio else "No bio added.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(16.dp)
-            )
-        }
-
-        Spacer(Modifier.height(20.dp))
-
-        // Edit Button
-        OutlinedButton(
-            onClick = onEditClick,
-            shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colorScheme.onBackground,
-            ),
-            border = ButtonDefaults.outlinedButtonBorder.copy(
-                brush = SolidColor(MaterialTheme.colorScheme.onBackground)
-            )
-        ) {
-            Icon(
-                imageVector = Icons.Default.Edit,
-                contentDescription = "Edit",
-                tint = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(
-                "Edit Profile",
-                color = MaterialTheme.colorScheme.onBackground
             )
         }
     }
@@ -274,8 +310,7 @@ fun StatsRow(
 ) {
     Row(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp),
+            .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
 

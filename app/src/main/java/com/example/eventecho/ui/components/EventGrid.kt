@@ -18,9 +18,12 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import com.example.eventecho.R
 import com.example.eventecho.ui.dataclass.Event
+import com.example.eventecho.utils.timeAgo
+
 
 @Composable
 fun EventGrid(
@@ -103,8 +106,9 @@ fun EventCardSmall(
                 contentDescription = event.title,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(80.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .height(100.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop
             )
 
             // Title
@@ -116,22 +120,11 @@ fun EventCardSmall(
                 modifier = Modifier.padding(bottom = 4.dp, top = 4.dp)
             )
 
-            // Location
-            if (!event.location.isNullOrBlank()) {
-                Text(
-                    text = event.location,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray,
-                    maxLines = 1,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-            }
-
             // Date
             Text(
                 text = event.date,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = Color.Gray
             )
         }
     }

@@ -35,10 +35,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.eventecho.R
-import com.example.eventecho.ui.components.DatePicker
 import com.example.eventecho.ui.viewmodels.CreateEventViewModel
 import com.example.eventecho.ui.viewmodels.CreateEventViewModelFactory
 import com.example.eventecho.data.firebase.EventRepository
+import android.os.Environment
+import androidx.core.content.FileProvider
+import java.io.File
+import com.example.eventecho.ui.components.DatePicker
+import com.example.eventecho.ui.components.ImageSelectorCard
+import com.example.eventecho.ui.components.LimitedTextField
+import com.example.eventecho.ui.components.SimpleTextField
+import java.time.LocalDate
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -46,7 +53,8 @@ fun CreateEventScreen(
     navController: NavController,
     repo: EventRepository
 ) {
-    val app = LocalContext.current.applicationContext as Application
+    val context = LocalContext.current
+    val app = context.applicationContext as Application
 
     val viewModel: CreateEventViewModel = viewModel(
         factory = CreateEventViewModelFactory(repo, app)
@@ -54,7 +62,30 @@ fun CreateEventScreen(
 
     val ui by viewModel.ui.collectAsState()
 
-    // Image picker launcher
+    // CAMERA SUPPORT
+    var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    fun createImageUri(): Uri {
+        val imageFile = File(
+            context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+            "event_${System.currentTimeMillis()}.jpg"
+        )
+        return FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.provider",
+            imageFile
+        )
+    }
+
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && cameraImageUri != null) {
+            viewModel.onImageSelected(cameraImageUri!!)
+        }
+    }
+
+    // GALLERY PICKER
     val pickImageLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -62,9 +93,6 @@ fun CreateEventScreen(
     }
 
     Scaffold(
-        topBar = {
-            CreateEventTopBar(onBack = { navController.popBackStack() })
-        },
         bottomBar = {
             CreateEventBottomBar(
                 isLoading = ui.isLoading,
@@ -86,28 +114,34 @@ fun CreateEventScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(16.dp))
-
-            EventImagePicker(
+            ImageSelectorCard(
                 imageUri = ui.imageUri,
                 isLoading = ui.isLoading,
-                onClick = { pickImageLauncher.launch("image/*") }
+                onGalleryClick = { pickImageLauncher.launch("image/*") },
+                onCameraClick = {
+                    val newUri = createImageUri()
+                    cameraImageUri = newUri
+                    takePictureLauncher.launch(newUri)
+                },
             )
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(12.dp))
 
-            EventInputField(
-                label = "Event Title",
+            SimpleTextField(
                 value = ui.title,
-                onChange = viewModel::onTitleChange
+                onValueChange = viewModel::onTitleChange,
+                label = "Event Title"
             )
 
-            EventInputField(
-                label = "Description",
+            Spacer(Modifier.height(12.dp))
+
+            LimitedTextField(
                 value = ui.description,
-                onChange = viewModel::onDescriptionChange,
+                onValueChange = viewModel::onDescriptionChange,
+                label = "Description",
+                maxChars = 300,
                 minLines = 4,
-                maxLines = 8
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(Modifier.height(8.dp))
@@ -125,40 +159,27 @@ fun CreateEventScreen(
                 onDateSelected = viewModel::onDateChange
             )
 
-            Spacer(Modifier.height(90.dp)) // leave space above bottom buttons
+            Spacer(Modifier.height(90.dp))
         }
     }
 }
 
 @Composable
-fun CreateEventTopBar(onBack: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .padding(horizontal = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Text(
-            "Create Event",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
-    }
-}
-
-@Composable
-fun EventImagePicker(imageUri: Uri?, isLoading: Boolean, onClick: () -> Unit) {
+fun EventImagePicker(
+    imageUri: Uri?,
+    isLoading: Boolean,
+    onGalleryClick: () -> Unit,
+    onCameraClick: () -> Unit
+) {
     Box(contentAlignment = Alignment.Center) {
 
+        // Big circle (tap = gallery)
         Box(
             modifier = Modifier
                 .size(140.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surface)
-                .clickable { onClick() },
+                .clickable { onGalleryClick() },
             contentAlignment = Alignment.Center
         ) {
             when {
@@ -178,23 +199,29 @@ fun EventImagePicker(imageUri: Uri?, isLoading: Boolean, onClick: () -> Unit) {
             }
         }
 
+        // Camera button
         Box(
             modifier = Modifier
-                .size(38.dp)
+                .size(42.dp)
                 .align(Alignment.BottomEnd)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surface)
-                .clickable(onClick = onClick),
+                .clickable(onClick = onCameraClick),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Default.PhotoCamera, contentDescription = "Add Image")
+            Icon(Icons.Default.PhotoCamera, contentDescription = "Camera")
         }
     }
 
     Spacer(Modifier.height(12.dp))
 
-    Text("Tap image to select an event photo", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Text(
+        "Tap image to choose from gallery, or use camera",
+        fontSize = 13.sp,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }
+
 
 @Composable
 fun EventInputField(

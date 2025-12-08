@@ -1,6 +1,7 @@
 package com.example.eventecho.ui.components
 
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.West
@@ -19,9 +20,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.google.firebase.auth.FirebaseAuth
 import com.example.eventecho.ui.navigation.Routes
 
@@ -30,6 +33,7 @@ import com.example.eventecho.ui.navigation.Routes
 fun TopBar(
     navController: NavController,
     currentRoute: String?,
+    profilePicUrl: String?,
     onBackClick: () -> Unit)
 {
     var expanded by remember { mutableStateOf(false) }
@@ -53,6 +57,7 @@ fun TopBar(
         Routes.SavedEvents.route -> "Saved Events"
         Routes.MemoryView.route -> "Memory Details"
         Routes.EventDetail.route -> "Event Details"
+        Routes.CreateEvent.route -> "Create Event"
         else -> "EventEcho"  // default global title
     }
 
@@ -77,12 +82,25 @@ fun TopBar(
             },
         actions = {
             IconButton(onClick = { expanded = true }) {
-                Icon(
-                    Icons.Filled.AccountCircle,
-                    contentDescription = "Profile",
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(30.dp)
-                )
+
+                if (profilePicUrl != null) {
+                    // SHOW USER PROFILE PICTURE
+                    AsyncImage(
+                        model = profilePicUrl,
+                        contentDescription = "Profile",
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape),
+                    )
+                } else {
+                    // FALLBACK ICON
+                    Icon(
+                        Icons.Filled.AccountCircle,
+                        contentDescription = "Profile",
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
             }
 
             DropdownMenu(
