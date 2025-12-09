@@ -33,9 +33,14 @@ class ProfileViewModel(
     }
 
     private fun loadUser() {
-        userRepo.getUser { data ->
+        viewModelScope.launch {
 
-            val recentIds: List<String> =
+            val data = userRepo.getUser() ?: run {
+                _uiState.value = _uiState.value.copy(isLoading = false)
+                return@launch
+            }
+
+            val recentIds =
                 (data["recentEvents"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
 
             val user = ProfileUser(
@@ -56,7 +61,6 @@ class ProfileViewModel(
                 user = user
             )
 
-            // Load event objects from Firestore
             loadRecentEvents(recentIds)
         }
     }

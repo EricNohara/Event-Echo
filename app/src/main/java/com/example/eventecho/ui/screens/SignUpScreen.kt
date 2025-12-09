@@ -11,6 +11,7 @@ import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.example.eventecho.ui.navigation.Routes
 import com.example.eventecho.data.firebase.UserRepository
+import com.example.eventecho.ui.components.SimpleTextField
 
 @Composable
 fun SignUpScreen(navController: NavController) {
@@ -45,31 +46,28 @@ fun SignUpScreen(navController: NavController) {
         Spacer(Modifier.height(20.dp))
 
         // Username field
-        OutlinedTextField(
+        SimpleTextField(
             value = username,
             onValueChange = { username = it },
-            label = { Text("Username") },
-            singleLine = true
+            label = "Username"
         )
 
         Spacer(Modifier.height(12.dp))
 
         // Email field
-        OutlinedTextField(
+        SimpleTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("Email") },
-            singleLine = true
+            label = "Email"
         )
 
         Spacer(Modifier.height(12.dp))
 
         // Password field
-        OutlinedTextField(
+        SimpleTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Password") },
-            singleLine = true,
+            label = "Password",
             visualTransformation = PasswordVisualTransformation()
         )
 
@@ -107,15 +105,21 @@ fun SignUpScreen(navController: NavController) {
                         }
                 }
             }
-        }) {
+        },
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text("Create Account")
         }
 
         Spacer(Modifier.height(12.dp))
 
-        TextButton(onClick = {
-            navController.navigate(Routes.SignIn.route)
-        }) {
+        TextButton(
+            onClick = {
+                navController.navigate(Routes.SignIn.route)
+            },
+            colors = ButtonDefaults.textButtonColors(
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )) {
             Text("Already have an account? Sign In")
         }
 

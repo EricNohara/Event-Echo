@@ -21,13 +21,19 @@ class EditProfileViewModel(
     }
 
     private fun loadUser() {
-        repo.getUser { data ->
-            _uiState.value = EditProfileUiState(
-                username = data["username"] as? String ?: "",
-                bio = data["bio"] as? String ?: "",
-                profilePicUrl = data["profilePicUrl"] as? String,
-                isLoading = false
-            )
+        viewModelScope.launch {
+            val data = repo.getUser()
+            if (data != null) {
+                _uiState.value = _uiState.value.copy(
+                    username = data["username"] as? String ?: "",
+                    bio = data["bio"] as? String ?: "",
+                    profilePicUrl = data["profilePicUrl"] as? String,
+                    isLoading = false
+                )
+            } else {
+                // user is not logged in or document doesn't exist
+                _uiState.value = _uiState.value.copy(isLoading = false)
+            }
         }
     }
 

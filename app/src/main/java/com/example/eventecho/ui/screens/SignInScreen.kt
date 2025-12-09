@@ -10,6 +10,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.example.eventecho.ui.navigation.Routes
+import com.example.eventecho.ui.components.SimpleTextField
+
 
 @Composable
 fun SignInScreen(navController: NavController) {
@@ -37,21 +39,19 @@ fun SignInScreen(navController: NavController) {
 
         Spacer(Modifier.height(20.dp))
 
-        OutlinedTextField(
+        SimpleTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("Email") },
-            singleLine = true
+            label = "Email"
         )
 
         Spacer(Modifier.height(12.dp))
 
-        OutlinedTextField(
+        SimpleTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Password") },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation() // 🔥 hides password
+            label = "Password",
+            visualTransformation = PasswordVisualTransformation()
         )
 
         Spacer(Modifier.height(20.dp))
@@ -74,15 +74,20 @@ fun SignInScreen(navController: NavController) {
                         }
                 }
             }
-        }) {
+        },
+        modifier = Modifier.fillMaxWidth()
+            ) {
             Text("Sign In")
         }
 
         Spacer(Modifier.height(12.dp))
 
-        TextButton(onClick = {
-            navController.navigate(Routes.SignUp.route)
-        }) {
+        TextButton(
+            onClick = { navController.navigate(Routes.SignUp.route) },
+            colors = ButtonDefaults.textButtonColors(
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        ) {
             Text("Don't have an account? Sign Up")
         }
 

@@ -35,12 +35,10 @@ class UserRepository {
     }
 
     /** FETCH USER PROFILE (safe if no user logged in) */
-    fun getUser(onSuccess: (Map<String, Any>) -> Unit) {
-        val uid = getUid() ?: return
-        db.collection("users").document(uid).get()
-            .addOnSuccessListener { doc ->
-                if (doc.exists()) onSuccess(doc.data ?: emptyMap())
-            }
+    suspend fun getUser(): Map<String, Any>? {
+        val uid = getUid() ?: return null
+        val snapshot = db.collection("users").document(uid).get().await()
+        return snapshot.data
     }
 
     /** UPDATE TEXT FIELDS (safe) */

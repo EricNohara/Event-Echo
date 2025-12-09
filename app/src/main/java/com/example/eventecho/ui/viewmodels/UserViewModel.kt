@@ -23,15 +23,10 @@ class UserViewModel(
         loadUserProfilePic()
     }
 
-    private fun loadUserProfilePic() {
-        val uid = userRepo.getUid() ?: return  // no crash — just skip
-
-        viewModelScope.launch {
-            userRepo.getUser { data ->
-                val url = data["profilePicUrl"] as? String
-                _uiState.value = UserUiState(profilePicUrl = url)
-            }
-        }
+    private fun loadUserProfilePic() = viewModelScope.launch {
+        val data = userRepo.getUser() ?: return@launch
+        val url = data["profilePicUrl"] as? String
+        _uiState.value = UserUiState(profilePicUrl = url)
     }
 }
 

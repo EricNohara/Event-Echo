@@ -81,22 +81,28 @@ fun EventEchoApp() {
             )
         }
 
+        val hideTopBar = currentRoute in listOf(
+            Routes.SignIn.route,
+            Routes.SignUp.route
+        )
+
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
-                TopBar(
-                    navController = navController,
-                    currentRoute = currentRoute,
-                    profilePicUrl = userState.profilePicUrl,
-                    onBackClick = { navController.popBackStack() }
-                )
+                if (!hideTopBar) {
+                    TopBar(
+                        navController = navController,
+                        currentRoute = currentRoute,
+                        profilePicUrl = userState.profilePicUrl,
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
             },
             bottomBar = {
                 if (showBottomBar) BottomBar(navController)
             },
             containerColor = bgColor
         ) { innerPadding ->
-
             Surface(
                 modifier = Modifier
                     .fillMaxSize()
