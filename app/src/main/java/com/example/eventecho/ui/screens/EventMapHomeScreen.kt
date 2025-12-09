@@ -9,6 +9,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -267,20 +269,24 @@ fun FilterRow(
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(12.dp)
+            .padding(16.dp)
     ) {
 
         Row(verticalAlignment = Alignment.CenterVertically) {
 
-            // SEARCH BAR (filters only list)
+            // --- FOCUS-AWARE SEARCH BAR ---
+            val interactionSource = remember { MutableInteractionSource() }
+            val isFocused by interactionSource.collectIsFocusedAsState()
+
             TextField(
                 value = searchQuery.value,
                 onValueChange = { searchQuery.value = it },
                 placeholder = { Text("Search events") },
                 modifier = Modifier
                     .weight(1f)
-                    .height(52.dp),
+                    .fillMaxWidth(),
                 singleLine = true,
+                interactionSource = interactionSource,
                 shape = RoundedCornerShape(20),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -288,14 +294,18 @@ fun FilterRow(
                     disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
+                    cursorColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = if (isFocused)
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                }
+                },
             )
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -305,7 +315,7 @@ fun FilterRow(
                 Button(
                     onClick = { onExpandMenu(true) },
                     shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.height(52.dp)
+                    modifier = Modifier.height(58.dp)
                 ) {
                     Icon(Icons.Default.FilterList, contentDescription = null)
                     Spacer(Modifier.width(6.dp))
@@ -315,10 +325,11 @@ fun FilterRow(
                 DropdownMenu(
                     expanded = filterMenuExpanded,
                     onDismissRequest = { onExpandMenu(false) },
-                    modifier = Modifier.background(MaterialTheme.colorScheme.tertiary).padding(16.dp),
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.tertiary)
+                        .padding(16.dp),
                 ) {
 
-                    // Radius
                     Text("Radius: ${radiusState.value} miles")
 
                     Slider(
@@ -337,7 +348,6 @@ fun FilterRow(
 
                     Spacer(Modifier.height(12.dp))
 
-                    // Start Date Picker
                     Column(
                         Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -354,7 +364,6 @@ fun FilterRow(
 
                     Spacer(Modifier.height(12.dp))
 
-                    // End Date Picker
                     Column(
                         Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally

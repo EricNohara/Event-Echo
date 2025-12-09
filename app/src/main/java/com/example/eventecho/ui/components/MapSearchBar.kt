@@ -1,6 +1,8 @@
 package com.example.eventecho.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,27 +25,47 @@ fun MapSearchBar(
     var text by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
 
+    // Detect focus via InteractionSource
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
     TextField(
         value = text,
         onValueChange = {
-            //show text if less than 50 characters
             if (it.length <= 50) text = it
         },
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp)),
+            .background(
+                MaterialTheme.colorScheme.surface,
+                RoundedCornerShape(24.dp)
+            ),
         placeholder = { Text("Search maps") },
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+
+        leadingIcon = {
+            Icon(
+                Icons.Default.Search,
+                contentDescription = null,
+                tint = if (isFocused)
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+
         singleLine = true,
+        interactionSource = interactionSource,
         colors = TextFieldDefaults.colors(
             focusedContainerColor = MaterialTheme.colorScheme.surface,
             unfocusedContainerColor = MaterialTheme.colorScheme.surface,
             focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
+            unfocusedIndicatorColor = Color.Transparent,
+            cursorColor = MaterialTheme.colorScheme.onPrimaryContainer
         ),
-        shape = RoundedCornerShape(24.dp),
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), //shows search button on keyboard
+        shape = RoundedCornerShape(12.dp),
+
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions(onSearch = {
             if (text.isNotBlank()) {
                 onSearch(text)

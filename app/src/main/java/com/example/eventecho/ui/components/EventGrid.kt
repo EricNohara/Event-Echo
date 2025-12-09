@@ -35,7 +35,7 @@ fun EventGrid(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(start = 12.dp, end = 12.dp)
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp)
     ) {
         items(events.chunked(2)) { rowEvents ->
             Row(
