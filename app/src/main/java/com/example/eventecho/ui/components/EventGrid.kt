@@ -23,6 +23,7 @@ import androidx.compose.ui.res.painterResource
 import com.example.eventecho.R
 import com.example.eventecho.ui.dataclass.Event
 import com.example.eventecho.utils.timeAgo
+import com.example.eventecho.utils.timeAgoOrAhead
 
 
 @Composable
@@ -33,7 +34,7 @@ fun EventGrid(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(12.dp)
+        contentPadding = PaddingValues(start = 12.dp, end = 12.dp)
     ) {
         items(events.chunked(2)) { rowEvents ->
             Row(
@@ -122,7 +123,7 @@ fun EventCardSmall(
 
             // Date
             Text(
-                text = event.date,
+                text = timeAgoOrAhead(event.date),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray
             )

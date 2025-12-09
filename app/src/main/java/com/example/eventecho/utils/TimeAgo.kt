@@ -1,6 +1,9 @@
 package com.example.eventecho.utils
 
 import com.google.firebase.Timestamp
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 
 // helper function to format firebase dates well
@@ -26,5 +29,44 @@ fun timeAgo(timestamp: Timestamp?): String {
         days < 30 -> "${days / 7} weeks ago"
         days < 365 -> "${days / 30} months ago"
         else -> "${days / 365} years ago"
+    }
+}
+
+fun timeAgoOrAhead(dateString: String?): String {
+    if (dateString.isNullOrBlank()) return "Unknown"
+
+    return try {
+        val eventDate = LocalDate.parse(dateString)
+        val today = LocalDate.now(ZoneId.systemDefault())
+
+        val daysDiff = ChronoUnit.DAYS.between(eventDate, today) // positive if past, negative if future
+
+        // --- FUTURE ---
+        if (daysDiff < 0) {
+            val days = -daysDiff
+
+            return when {
+                days == 0L -> "Today"
+                days == 1L -> "Tomorrow"
+                days < 7 -> "in $days days"
+                days < 30 -> "in ${days / 7} weeks"
+                days < 365 -> "in ${days / 30} months"
+                else -> "in ${days / 365} years"
+            }
+        }
+
+        // --- PAST ---
+        if (daysDiff == 0L) return "Today"
+        if (daysDiff == 1L) return "Yesterday"
+
+        return when {
+            daysDiff < 7 -> "$daysDiff days ago"
+            daysDiff < 30 -> "${daysDiff / 7} weeks ago"
+            daysDiff < 365 -> "${daysDiff / 30} months ago"
+            else -> "${daysDiff / 365} years ago"
+        }
+
+    } catch (e: Exception) {
+        "Unknown"
     }
 }

@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -25,7 +24,10 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 @Composable
 fun EventDetailScreen(
@@ -38,18 +40,37 @@ fun EventDetailScreen(
     val uid = FirebaseAuth.getInstance().currentUser?.uid
     val scope = rememberCoroutineScope()
 
+    // SNACKBAR
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Load event
     LaunchedEffect(eventId) {
         event = repo.getEventById(eventId)
         isLoading = false
         if (uid != null) repo.addRecentEvent(uid, eventId)
     }
 
+    // Favorite state
     var isFavorited by remember { mutableStateOf(false) }
     LaunchedEffect(uid) {
         if (uid != null) {
             val saved = repo.getUserSavedEvents(uid)
             isFavorited = saved.contains(eventId)
         }
+    }
+
+    // Parse event date safely
+    val eventDate = remember(event) {
+        try {
+            event?.date?.let { LocalDate.parse(it) }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    // Did this event occur already?
+    val hasEventOccurred = remember(eventDate) {
+        eventDate?.isBefore(LocalDate.now()) == true
     }
 
     when {
@@ -69,12 +90,21 @@ fun EventDetailScreen(
         else -> {
             val e = event!!
 
-            // Main layout with content + bottom bar
             Scaffold(
+                snackbarHost = { SnackbarHost(snackbarHostState) },
                 bottomBar = {
                     EventBottomActionBar(
-                        onMemoryWall = { navController.navigate("memory_wall/${e.id}") },
-                        onBack = { navController.popBackStack() }
+                        onMemoryWall = {
+                            if (hasEventOccurred) {
+                                navController.navigate("memory_wall/${e.id}")
+                            } else {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        "This event hasn’t happened yet — you can add memories after it begins."
+                                    )
+                                }
+                            }
+                        }
                     )
                 }
             ) { paddingValues ->
@@ -100,28 +130,20 @@ fun EventDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Left side: Date + Location text
-                        Column(
-                            modifier = Modifier.weight(1f)
-                        ) {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text("Date: ${e.date}", style = MaterialTheme.typography.bodyMedium)
-
                             if (e.location.isNotBlank()) {
                                 Text("Location: ${e.location}", style = MaterialTheme.typography.bodyMedium)
                             }
                         }
 
-                        // Right side: Favorite button
                         IconButton(
                             onClick = {
                                 if (uid != null) {
                                     isFavorited = !isFavorited
                                     scope.launch {
-                                        if (isFavorited) {
-                                            repo.addFavoriteEvent(uid, e.id)
-                                        } else {
-                                            repo.removeFavoriteEvent(uid, e.id)
-                                        }
+                                        if (isFavorited) repo.addFavoriteEvent(uid, e.id)
+                                        else repo.removeFavoriteEvent(uid, e.id)
                                     }
                                 }
                             }
@@ -130,9 +152,8 @@ fun EventDetailScreen(
                                 imageVector = if (isFavorited) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                                 contentDescription = null,
                                 tint = if (isFavorited)
-                                    MaterialTheme.colorScheme.onPrimaryContainer
-                                else
-                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                    MaterialTheme.colorScheme.error
+                                else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -148,7 +169,6 @@ fun EventDetailScreen(
                                 .fillMaxWidth()
                                 .height(240.dp)
                         )
-
                         Spacer(Modifier.height(16.dp))
                     }
 
@@ -166,32 +186,18 @@ fun EventDetailScreen(
     }
 }
 
-// buttons at the bottom of the screen
+// BOTTOM BAR
 @Composable
 fun EventBottomActionBar(
-    onMemoryWall: () -> Unit,
-    onBack: () -> Unit
+    onMemoryWall: () -> Unit
 ) {
-    Surface (
-        color = MaterialTheme.colorScheme.background
-    ) {
+    Surface(color = MaterialTheme.colorScheme.background) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Button(
-                onClick = onBack,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            ) {
-                Text("Back")
-            }
-
             Button(
                 onClick = onMemoryWall,
                 modifier = Modifier.weight(1f)
