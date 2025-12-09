@@ -24,6 +24,7 @@ import com.example.eventecho.R
 import com.example.eventecho.ui.dataclass.Event
 import com.example.eventecho.utils.timeAgo
 import com.example.eventecho.utils.timeAgoOrAhead
+import com.example.eventecho.ui.theme.EventEchoTitleFont
 
 
 @Composable
@@ -116,6 +117,7 @@ fun EventCardSmall(
             Text(
                 text = event.title,
                 fontWeight = FontWeight.Bold,
+                fontFamily = EventEchoTitleFont,
                 maxLines = 2,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = 4.dp, top = 4.dp)
