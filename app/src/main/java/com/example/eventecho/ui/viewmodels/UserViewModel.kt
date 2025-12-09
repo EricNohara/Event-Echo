@@ -24,6 +24,8 @@ class UserViewModel(
     }
 
     private fun loadUserProfilePic() {
+        val uid = userRepo.getUid() ?: return  // no crash — just skip
+
         viewModelScope.launch {
             userRepo.getUser { data ->
                 val url = data["profilePicUrl"] as? String
