@@ -165,7 +165,10 @@ fun MapFullScreen(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = 90.dp, end = 16.dp)
-                .background(Color.White, MaterialTheme.shapes.medium)
+                .background(
+                    MaterialTheme.colorScheme.surface,
+                    MaterialTheme.shapes.medium
+                )
         ) {
             Icon(Icons.Default.MyLocation, contentDescription = "Current Location")
         }

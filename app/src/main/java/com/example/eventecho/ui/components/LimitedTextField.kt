@@ -42,7 +42,8 @@ fun LimitedTextField(
                 focusedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                cursorColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
         )
 
@@ -78,15 +79,13 @@ fun SimpleTextField(
         colors = TextFieldDefaults.colors(
             focusedContainerColor = MaterialTheme.colorScheme.surface,
             unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-
             focusedIndicatorColor = MaterialTheme.colorScheme.onPrimaryContainer,
             unfocusedIndicatorColor = MaterialTheme.colorScheme.outline,
-
             focusedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
             unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-
             focusedTextColor = MaterialTheme.colorScheme.onSurface,
-            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+            cursorColor = MaterialTheme.colorScheme.onPrimaryContainer
         )
     )
 }
