@@ -29,7 +29,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.eventecho.ui.viewmodels.UserViewModel
 import com.example.eventecho.ui.viewmodels.UserViewModelFactory
 import com.example.eventecho.data.firebase.UserRepository
-
+import com.google.android.libraries.places.api.Places
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -64,6 +64,13 @@ fun EventEchoApp() {
     )
 
     val userState by userViewModel.uiState.collectAsState()
+
+    // initialize Places
+    LaunchedEffect(Unit) {
+        if (!Places.isInitialized()) {
+            Places.initialize(context, BuildConfig.PLACES_API_KEY)
+        }
+    }
 
 
     EventEchoTheme(darkTheme = isDarkMode) {

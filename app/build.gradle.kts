@@ -32,6 +32,11 @@ android {
         manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
 
         buildConfigField("String", "TICKETMASTER_API_KEY", "\"$ticketmasterApiKey\"")
+
+        val placesApiKey = properties.getProperty("PLACES_API_KEY", "")
+        manifestPlaceholders["PLACES_API_KEY"] = placesApiKey
+
+        buildConfigField("String", "PLACES_API_KEY", "\"$placesApiKey\"")
     }
 
     buildTypes {
@@ -116,4 +121,7 @@ dependencies {
     implementation("com.google.firebase:firebase-storage")
 
     implementation("com.google.android.gms:play-services-location:21.2.0")
+
+    // places API
+    implementation("com.google.android.libraries.places:places:3.4.0")
 }
