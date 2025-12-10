@@ -201,4 +201,21 @@ class EventRepository(
         Log.d("EventRepository", "User $uid has ${snapshot.size()} created events")
         return snapshot.documents.mapNotNull { it.toObject(Event::class.java)?.copy(id = it.id) }
     }
+
+    // get user's profile who created the event
+    suspend fun getUserProfile(uid: String): Pair<String?, String?> = withContext(Dispatchers.IO) {
+        Log.d("EventRepository", "Fetching user profile for $uid")
+
+        val doc = firestore.collection("users").document(uid).get().await()
+
+        if (!doc.exists()) {
+            Log.w("EventRepository", "User profile not found for $uid")
+            return@withContext (null to null)
+        }
+
+        val username = doc.getString("username")
+        val profileUrl = doc.getString("profilePicUrl")
+
+        return@withContext (username to profileUrl)
+    }
 }

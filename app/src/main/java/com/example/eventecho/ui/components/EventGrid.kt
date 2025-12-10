@@ -1,9 +1,12 @@
 package com.example.eventecho.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -17,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -96,22 +100,51 @@ fun EventCardSmall(
         ) {
 
             // Image
-            val imageModel: Any =
-                if (event.imageUrl.isNullOrBlank()) {
-                    R.drawable.default_image
-                } else {
-                    event.imageUrl
-                }
-
-            AsyncImage(
-                model = imageModel,
-                contentDescription = event.title,
+            // --- IMAGE WITH CREATOR BADGE OVERLAY ---
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.Crop
-            )
+            ) {
+                val imageModel: Any =
+                    if (event.imageUrl.isNullOrBlank()) R.drawable.default_image else event.imageUrl
+
+                AsyncImage(
+                    model = imageModel,
+                    contentDescription = event.title,
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop
+                )
+
+                // DARK GRADIENT OVERLAY
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Black.copy(alpha = 0.2f),
+                                    Color.Transparent                  // fade to clear
+                                )
+                            )
+                        )
+                )
+
+                // CREATOR BADGE
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(top = 6.dp, start = 6.dp)
+                ) {
+                    CreatorBadgeSmall(
+                        source = event.source,
+                        createdBy = event.createdBy
+                    )
+                }
+            }
 
             // Title
             Text(
@@ -176,5 +209,30 @@ fun EventGridNonScrollable(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun CreatorBadgeSmall(
+    source: String,
+    createdBy: String?
+) {
+    val badgeModel: Any = when (source) {
+        "user" -> R.drawable.default_creator
+        else -> R.drawable.ticketmaster_logo
+    }
+
+    Box(
+        modifier = Modifier
+            .size(22.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f))
+    ) {
+        AsyncImage(
+            model = badgeModel,
+            contentDescription = "Creator badge",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.clip(CircleShape)
+        )
     }
 }

@@ -3,7 +3,9 @@ package com.example.eventecho.utils
 import com.google.firebase.Timestamp
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 // helper function to format firebase dates well
@@ -68,5 +70,17 @@ fun timeAgoOrAhead(dateString: String?): String {
 
     } catch (e: Exception) {
         "Unknown"
+    }
+}
+
+fun formatPrettyDate(dateString: String): String {
+    return try {
+        val inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.US)
+        val outputFormatter = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.US)
+
+        val date = LocalDate.parse(dateString, inputFormatter)
+        date.format(outputFormatter)
+    } catch (e: Exception) {
+        dateString // fallback to raw string if invalid
     }
 }
