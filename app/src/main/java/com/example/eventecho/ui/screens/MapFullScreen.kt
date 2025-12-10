@@ -152,19 +152,26 @@ fun MapFullScreen(
         )
 
         // SEARCH BAR
+        val userLocationState by viewModel.userLocation.collectAsState()
+
         Box(modifier = Modifier.align(Alignment.TopCenter)) {
-            MapSearchBar { query ->
-                Log.d("MapScreen", "Search query submitted: $query")
-                viewModel.performSearch(query, context)
-            }
+            MapSearchBar(
+                userLat = userLocationState?.latitude ?: 0.0,
+                userLng = userLocationState?.longitude ?: 0.0,
+                onSearch = { query ->
+                    Log.d("MapScreen", "Search query submitted: $query")
+                    viewModel.performSearch(query, context)
+                },
+                dropdownMaxHeight = 300.dp
+            )
         }
 
         // GPS BUTTON
         IconButton(
             onClick = { fetchLocation() },
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 90.dp, end = 16.dp)
+                .align(Alignment.BottomStart)
+                .padding(bottom = 16.dp, start = 16.dp)
                 .background(
                     MaterialTheme.colorScheme.surface,
                     MaterialTheme.shapes.medium
