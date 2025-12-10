@@ -8,11 +8,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,8 +51,8 @@ fun DatePicker(
     // Button to open the date picker
     Button(
         onClick = { datePickerDialog.show() },
-        shape = RoundedCornerShape(6.dp),
-        contentPadding = PaddingValues(8.dp, 6.dp)
+        shape = RoundedCornerShape(12.dp),
+        contentPadding = PaddingValues(12.dp, 16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(

@@ -111,7 +111,7 @@ fun CreateEventScreen(
         Column(
             modifier = Modifier
                 .padding(padding)
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -126,13 +126,39 @@ fun CreateEventScreen(
                 },
             )
 
+            Spacer(Modifier.height(16.dp))
+
+            LocationSelector(
+                locationName = ui.locationName,
+                onLocationNameChange = viewModel::onLocationNameChange,
+                onLocationSelected = { name, lat, lng ->
+                    viewModel.onLocationSelected(name, lat, lng)
+                }
+            )
+
             Spacer(Modifier.height(12.dp))
 
-            SimpleTextField(
-                value = ui.title,
-                onValueChange = viewModel::onTitleChange,
-                label = "Event Title"
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Title field takes most of the width
+                SimpleTextField(
+                    value = ui.title,
+                    onValueChange = viewModel::onTitleChange,
+                    label = "Event Title",
+                    modifier = Modifier.weight(1f)
+                )
+
+                Spacer(Modifier.width(12.dp))
+
+                // Date picker takes minimal width
+                DatePicker(
+                    initialDate = ui.date,
+                    onDateSelected = viewModel::onDateChange
+                )
+            }
 
             Spacer(Modifier.height(12.dp))
 
@@ -145,32 +171,7 @@ fun CreateEventScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(Modifier.height(8.dp))
-
-            LocationSelector(
-                locationName = ui.locationName,
-                onLocationNameChange = viewModel::onLocationNameChange,
-                onLocationSelected = { name, lat, lng ->
-                    viewModel.onLocationSelected(name, lat, lng)
-                }
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            Text(
-                "Event Date",
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(Modifier.height(4.dp))
-
-            DatePicker(
-                initialDate = ui.date,
-                onDateSelected = viewModel::onDateChange
-            )
-
-            Spacer(Modifier.height(90.dp))
+            Spacer(Modifier.height(16.dp))
         }
     }
 }
