@@ -28,7 +28,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
@@ -40,7 +39,8 @@ import androidx.compose.ui.layout.ContentScale
 import com.example.eventecho.ui.components.CreatorInfoSection
 import com.example.eventecho.utils.formatPrettyDate
 import kotlinx.coroutines.launch
-import java.time.LocalDate
+import com.example.eventecho.R
+
 
 @Composable
 fun EventDetailScreen(
@@ -117,7 +117,7 @@ fun EventDetailScreen(
             // --- HERO IMAGE WITH TITLE OVERLAY ---
             Box {
                 AsyncImage(
-                    model = e.imageUrl,
+                    model = if (!e.imageUrl.isNullOrBlank()) e.imageUrl else R.drawable.default_image,
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxWidth()

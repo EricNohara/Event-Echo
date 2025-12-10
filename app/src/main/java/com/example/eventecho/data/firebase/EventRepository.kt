@@ -104,6 +104,7 @@ class EventRepository(
         date: String,
         latitude: Double,
         longitude: Double,
+        location: String? = "",
         imageUrl: String?,
         createdBy: String
     ) = withContext(Dispatchers.IO) {
@@ -116,7 +117,7 @@ class EventRepository(
             "title" to title,
             "description" to description,
             "date" to date,
-            "location" to "",               // optional, or reverse-geocode later
+            "location" to location,
             "latitude" to latitude,
             "longitude" to longitude,
             "imageUrl" to (imageUrl ?: ""),

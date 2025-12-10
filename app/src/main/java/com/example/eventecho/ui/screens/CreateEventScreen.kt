@@ -44,6 +44,7 @@ import java.io.File
 import com.example.eventecho.ui.components.DatePicker
 import com.example.eventecho.ui.components.ImageSelectorCard
 import com.example.eventecho.ui.components.LimitedTextField
+import com.example.eventecho.ui.components.LocationSelector
 import com.example.eventecho.ui.components.SimpleTextField
 import java.time.LocalDate
 
@@ -145,6 +146,16 @@ fun CreateEventScreen(
             )
 
             Spacer(Modifier.height(8.dp))
+
+            LocationSelector(
+                locationName = ui.locationName,
+                onLocationNameChange = viewModel::onLocationNameChange,
+                onLocationSelected = { name, lat, lng ->
+                    viewModel.onLocationSelected(name, lat, lng)
+                }
+            )
+
+            Spacer(Modifier.height(12.dp))
 
             Text(
                 "Event Date",

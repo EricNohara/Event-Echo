@@ -21,6 +21,9 @@ data class CreateEventUiState(
     val description: String = "",
     val date: LocalDate = LocalDate.now(),
     val imageUri: Uri? = null,
+    val locationName: String = "",
+    val latitude: Double? = null,
+    val longitude: Double? = null,
     val isLoading: Boolean = false
 )
 
@@ -39,6 +42,10 @@ class CreateEventViewModel(
     fun onDescriptionChange(v: String) { _ui.value = _ui.value.copy(description = v) }
     fun onDateChange(v: LocalDate) { _ui.value = _ui.value.copy(date = v) }
     fun onImageSelected(uri: Uri) { _ui.value = _ui.value.copy(imageUri = uri) }
+    fun onLocationNameChange(v: String) { _ui.value = _ui.value.copy(locationName = v) }
+    fun onLocationSelected(name: String, lat: Double, lng: Double) {
+        _ui.value = _ui.value.copy(locationName = name, latitude = lat, longitude = lng)
+    }
 
     /** Upload image + create Firestore doc */
     fun createEvent(onSuccess: (String) -> Unit, onError: (Exception) -> Unit) {
@@ -50,9 +57,8 @@ class CreateEventViewModel(
                     ?: throw Exception("Not logged in")
 
                 // Get location
-                val location = fused.lastLocation.await()
-                val lat = location?.latitude ?: 0.0
-                val lon = location?.longitude ?: 0.0
+                val lat = ui.value.latitude ?: throw Exception("Location not selected")
+                val lon = ui.value.longitude ?: throw Exception("Location not selected")
 
                 // Upload image (if exists)
                 val imageUrl = ui.value.imageUri?.let { uploadImage(it) }
@@ -65,6 +71,7 @@ class CreateEventViewModel(
                     latitude = lat,
                     longitude = lon,
                     imageUrl = imageUrl,
+                    location = ui.value.locationName,
                     createdBy = uid
                 )
 
