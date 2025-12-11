@@ -44,7 +44,7 @@ import java.io.File
 import com.example.eventecho.ui.components.DatePicker
 import com.example.eventecho.ui.components.ImageSelectorCard
 import com.example.eventecho.ui.components.LimitedTextField
-import com.example.eventecho.ui.components.LocationSelector
+import com.example.eventecho.ui.components.LocationSearchBar
 import com.example.eventecho.ui.components.SimpleTextField
 import java.time.LocalDate
 
@@ -62,6 +62,8 @@ fun CreateEventScreen(
     )
 
     val ui by viewModel.ui.collectAsState()
+
+    val usingCurrentLocation: Boolean = false
 
     // CAMERA SUPPORT
     var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -93,10 +95,15 @@ fun CreateEventScreen(
         if (uri != null) viewModel.onImageSelected(uri)
     }
 
+    val canCreate = ui.title.isNotBlank() &&
+            ui.locationLat != null &&
+            ui.locationLng != null
+
     Scaffold(
         bottomBar = {
             CreateEventBottomBar(
                 isLoading = ui.isLoading,
+                canCreate = canCreate,
                 onCancel = { navController.popBackStack() },
                 onCreate = {
                     viewModel.createEvent(
@@ -128,12 +135,36 @@ fun CreateEventScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            LocationSelector(
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Checkbox(
+                    checked = ui.usingCurrentLocation,
+                    onCheckedChange = { checked ->
+                        if (checked) {
+                            viewModel.enableCurrentLocation()
+                        } else {
+                            viewModel.disableCurrentLocation()
+                        }
+                    }
+                )
+
+                Text("Use Current Location")
+            }
+
+            LocationSearchBar(
                 locationName = ui.locationName,
-                onLocationNameChange = viewModel::onLocationNameChange,
+                onLocationNameChange = {
+                    if (!ui.usingCurrentLocation) viewModel.onLocationNameChange(it)
+                },
+                userLat = ui.userLat,
+                userLng = ui.userLng,
                 onLocationSelected = { name, lat, lng ->
-                    viewModel.onLocationSelected(name, lat, lng)
-                }
+                    if (!ui.usingCurrentLocation)
+                        viewModel.onLocationSelected(name, lat, lng)
+                },
+                enabled = !ui.usingCurrentLocation
             )
 
             Spacer(Modifier.height(12.dp))
@@ -280,6 +311,7 @@ fun EventInputField(
 @Composable
 fun CreateEventBottomBar(
     isLoading: Boolean,
+    canCreate: Boolean,
     onCancel: () -> Unit,
     onCreate: () -> Unit
 ) {
@@ -309,7 +341,7 @@ fun CreateEventBottomBar(
                 onClick = onCreate,
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(10.dp),
-                enabled = !isLoading
+                enabled = !isLoading && canCreate
             ) {
                 Text(if (isLoading) "Creating..." else "Create")
             }
