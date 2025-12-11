@@ -106,13 +106,13 @@ fun LocationSearchBar(
                 suggestions = emptyList()
             }),
             colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
                 focusedContainerColor = MaterialTheme.colorScheme.surface,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                cursorColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                focusedIndicatorColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                unfocusedIndicatorColor = MaterialTheme.colorScheme.outline,
                 focusedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                cursorColor = MaterialTheme.colorScheme.onPrimaryContainer
             ),
             enabled = enabled
         )
