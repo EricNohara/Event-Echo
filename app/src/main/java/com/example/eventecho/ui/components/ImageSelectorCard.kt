@@ -30,8 +30,8 @@ fun ImageSelectorCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(250.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .height(225.dp)
+            .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.surface)
             .clickable { onGalleryClick() },
         contentAlignment = Alignment.Center

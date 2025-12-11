@@ -294,7 +294,10 @@ fun ProfileHeader(
                     AsyncImage(
                         model = profilePicUrl,
                         contentDescription = "Profile Picture",
-                        modifier = Modifier.clip(CircleShape)
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
                     )
                 } else {
                     Icon(
@@ -305,6 +308,7 @@ fun ProfileHeader(
                     )
                 }
             }
+
 
             Spacer(Modifier.width(16.dp))
 

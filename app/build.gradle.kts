@@ -84,6 +84,7 @@ dependencies {
     implementation(libs.androidx.rules)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3.adaptive)
+    implementation(libs.androidx.compose.foundation.layout)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

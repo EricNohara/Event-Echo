@@ -84,6 +84,10 @@ class ProfileViewModel(
             _uiState.value = _uiState.value.copy(recentEvents = events)
         }
     }
+
+    fun refreshUser() {
+        loadUser()
+    }
 }
 
 class ProfileViewModelFactory(

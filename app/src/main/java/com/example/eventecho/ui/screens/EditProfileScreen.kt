@@ -1,49 +1,69 @@
 package com.example.eventecho.ui.screens
 
 import android.net.Uri
+import android.os.Environment
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
 import com.example.eventecho.ui.viewmodels.EditProfileViewModel
-import com.example.eventecho.R
 import com.example.eventecho.ui.components.SimpleTextField
 import com.example.eventecho.ui.components.LimitedTextField
-
-
+import com.example.eventecho.ui.components.ImageSelectorCard
+import java.io.File
+import androidx.core.content.FileProvider
+import com.example.eventecho.ui.viewmodels.ProfileViewModel
+import com.example.eventecho.ui.viewmodels.UserViewModel
 
 @Composable
 fun EditProfileScreen(
     navController: NavController,
-    viewModel: EditProfileViewModel = viewModel()
+    viewModel: EditProfileViewModel = viewModel(),
+    profileViewModel: ProfileViewModel,
+    userViewModel: UserViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
-    val picker = rememberLauncherForActivityResult(
+    // --- IMAGE PICKERS ---
+    var cameraUri by remember { mutableStateOf<Uri?>(null) }
+
+    fun createTempImageUri(): Uri {
+        val imageFile = File(
+            context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+            "profile_${System.currentTimeMillis()}.jpg"
+        )
+        return FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.provider",
+            imageFile
+        )
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && cameraUri != null) {
+            viewModel.uploadImage(cameraUri!!)
+        }
+    }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) viewModel.uploadImage(uri)
     }
 
+    // Loading overlay
     if (uiState.isLoading) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
@@ -57,95 +77,57 @@ fun EditProfileScreen(
                 onCancel = { navController.popBackStack() },
                 onSave = {
                     viewModel.saveProfile()
+                    profileViewModel.refreshUser()
+                    userViewModel.refreshUser()
                     navController.popBackStack()
                 }
             )
         }
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
-            contentAlignment = Alignment.TopCenter
+                .padding(padding)
+                .padding(horizontal = 20.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(Modifier.height(20.dp))
 
-            Column(
+            ImageSelectorCard(
+                imageUri = uiState.profilePicUrl?.let { Uri.parse(it) },
+                isLoading = uiState.uploadingPicture,
+                onGalleryClick = { galleryLauncher.launch("image/*") },
+                onCameraClick = {
+                    val newUri = createTempImageUri()
+                    cameraUri = newUri
+                    cameraLauncher.launch(newUri)
+                },
                 modifier = Modifier
-                    .widthIn(max = 600.dp)
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Spacer(Modifier.height(24.dp))
+                    .height(225.dp)
+            )
 
-                AvatarSection(
-                    profilePicUrl = uiState.profilePicUrl,
-                    uploading = uiState.uploadingPicture,
-                    onClick = { picker.launch("image/*") }
-                )
+            Spacer(Modifier.height(28.dp))
 
-                Spacer(Modifier.height(32.dp))
+            SimpleTextField(
+                value = uiState.username,
+                onValueChange = viewModel::onUsernameChange,
+                label = "Display Name"
+            )
 
-                SimpleTextField(
-                    value = uiState.username,
-                    onValueChange = viewModel::onUsernameChange,
-                    label = "Display Name"
-                )
+            Spacer(Modifier.height(16.dp))
 
-                Spacer(Modifier.height(16.dp))
-
-                LimitedTextField(
-                    value = uiState.bio,
-                    onValueChange = viewModel::onBioChange,
-                    label = "Bio",
-                    maxChars = 300,
-                    minLines = 6,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+            LimitedTextField(
+                value = uiState.bio,
+                onValueChange = viewModel::onBioChange,
+                label = "Bio",
+                maxChars = 300,
+                minLines = 6,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
-}
-
-@Composable
-fun AvatarSection(profilePicUrl: String?, uploading: Boolean, onClick: () -> Unit) {
-    Box(contentAlignment = Alignment.Center) {
-        Box(
-            modifier = Modifier
-                .size(120.dp)
-                .clip(CircleShape)
-                .clickable { onClick() },
-            contentAlignment = Alignment.Center
-        ) {
-            when {
-                uploading -> CircularProgressIndicator()
-                profilePicUrl != null -> AsyncImage(
-                    model = profilePicUrl,
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier.fillMaxSize().clip(CircleShape)
-                )
-                else -> Image(
-                    painter = painterResource(R.drawable.default_avatar),
-                    contentDescription = "Default Avatar",
-                    modifier = Modifier.fillMaxSize().clip(CircleShape)
-                )
-            }
-        }
-        Box(
-            modifier = Modifier
-                .size(38.dp)
-                .align(Alignment.BottomEnd)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surface)
-                .clickable(onClick = onClick),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.Default.PhotoCamera, contentDescription = "Edit Photo")
-        }
-    }
-    Spacer(Modifier.height(12.dp))
-    Text("Click the camera icon to change avatar", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 @Composable
@@ -153,17 +135,18 @@ fun BottomActionBar(onCancel: () -> Unit, onSave: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
+            .padding(16.dp)
     ) {
         Row(
-            modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .widthIn(max = 600.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             OutlinedButton(
                 onClick = onCancel,
                 modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(10.dp)
+                shape = MaterialTheme.shapes.medium
             ) {
                 Text("Cancel")
             }
@@ -173,7 +156,7 @@ fun BottomActionBar(onCancel: () -> Unit, onSave: () -> Unit) {
             Button(
                 onClick = onSave,
                 modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(10.dp)
+                shape = MaterialTheme.shapes.medium
             ) {
                 Text("Save")
             }

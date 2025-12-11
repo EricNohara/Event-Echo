@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.eventecho.data.firebase.UserRepository
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -27,6 +28,10 @@ class UserViewModel(
         val data = userRepo.getUser() ?: return@launch
         val url = data["profilePicUrl"] as? String
         _uiState.value = UserUiState(profilePicUrl = url)
+    }
+
+    fun refreshUser() {
+        loadUserProfilePic()
     }
 }
 
