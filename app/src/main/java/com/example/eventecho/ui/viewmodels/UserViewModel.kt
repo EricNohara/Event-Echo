@@ -29,6 +29,10 @@ class UserViewModel(
         val url = data["profilePicUrl"] as? String
         _uiState.value = UserUiState(profilePicUrl = url)
     }
+
+    fun refreshUser() {
+        loadUserProfilePic()
+    }
 }
 
 class UserViewModelFactory(

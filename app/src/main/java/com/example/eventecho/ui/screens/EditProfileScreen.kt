@@ -21,11 +21,15 @@ import com.example.eventecho.ui.components.LimitedTextField
 import com.example.eventecho.ui.components.ImageSelectorCard
 import java.io.File
 import androidx.core.content.FileProvider
+import com.example.eventecho.ui.viewmodels.ProfileViewModel
+import com.example.eventecho.ui.viewmodels.UserViewModel
 
 @Composable
 fun EditProfileScreen(
     navController: NavController,
-    viewModel: EditProfileViewModel = viewModel()
+    viewModel: EditProfileViewModel = viewModel(),
+    profileViewModel: ProfileViewModel,
+    userViewModel: UserViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -73,6 +77,8 @@ fun EditProfileScreen(
                 onCancel = { navController.popBackStack() },
                 onSave = {
                     viewModel.saveProfile()
+                    profileViewModel.refreshUser()
+                    userViewModel.refreshUser()
                     navController.popBackStack()
                 }
             )
