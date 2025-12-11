@@ -129,6 +129,14 @@ class CreateEventViewModel(
         )
     }
 
+    fun clearManualLocation() {
+        _ui.value = _ui.value.copy(
+            locationName = "",
+            locationLat = null,
+            locationLng = null
+        )
+    }
+
     // --- EVENT CREATION ---
     fun createEvent(onSuccess: (String) -> Unit, onError: (Exception) -> Unit) {
         viewModelScope.launch {

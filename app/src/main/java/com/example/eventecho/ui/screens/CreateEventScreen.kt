@@ -145,7 +145,9 @@ fun CreateEventScreen(
                         if (checked) {
                             viewModel.enableCurrentLocation()
                         } else {
+                            // Reset the text field + clear coordinates
                             viewModel.disableCurrentLocation()
+                            viewModel.clearManualLocation()
                         }
                     }
                 )
