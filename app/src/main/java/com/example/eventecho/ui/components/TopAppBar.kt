@@ -82,18 +82,16 @@ fun TopBar(
             },
         actions = {
             IconButton(onClick = { expanded = true }) {
-
                 if (profilePicUrl != null) {
-                    // SHOW USER PROFILE PICTURE
                     AsyncImage(
                         model = profilePicUrl,
                         contentDescription = "Profile",
                         modifier = Modifier
                             .size(34.dp)
                             .clip(CircleShape),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
                     )
                 } else {
-                    // FALLBACK ICON
                     Icon(
                         Icons.Filled.AccountCircle,
                         contentDescription = "Profile",
