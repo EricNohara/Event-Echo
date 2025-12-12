@@ -86,7 +86,7 @@ fun AppNavGraph(navController: NavHostController) {
             arguments = listOf(navArgument("eventId") { type = NavType.StringType })
         ) { entry ->
             val eventId = entry.arguments?.getString("eventId") ?: ""
-            EventDetailScreen(navController, eventRepo, eventId)
+            EventDetailScreen(navController, eventRepo, eventId, profileViewModel)
         }
 
         composable(Routes.SavedEvents.route) {

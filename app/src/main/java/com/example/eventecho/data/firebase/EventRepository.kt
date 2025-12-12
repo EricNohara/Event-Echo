@@ -219,4 +219,75 @@ class EventRepository(
 
         return@withContext (username to profileUrl)
     }
+
+    // helper to delete images from firebase storage
+    private suspend fun deleteImageFromStorage(imageUrl: String) {
+        if (imageUrl.isBlank()) return
+
+        val storageRef = com.google.firebase.storage.FirebaseStorage
+            .getInstance()
+            .getReferenceFromUrl(imageUrl)
+
+        storageRef.delete().await()
+    }
+
+    // delete event
+    suspend fun deleteEvent(eventId: String, ownerUid: String) = withContext(Dispatchers.IO) {
+        val eventRef = firestore.collection("events").document(eventId)
+        val memoryWallRef = eventRef.collection("memories")
+
+        // Fetch memory wall entries
+        val memories = memoryWallRef.get().await()
+
+        for (doc in memories.documents) {
+            val imageUrl = doc.getString("imageUrl") ?: ""
+            val upvoteCount = doc.getLong("upvoteCount") ?: 0L
+            val memoryOwner = doc.getString("userId")
+
+            // Delete image from Storage
+            deleteImageFromStorage(imageUrl)
+
+            if (memoryOwner != null) {
+
+                val updates = mutableMapOf<String, Any>()
+
+                // Subtract upvotes from poster
+                if (upvoteCount > 0) {
+                    updates["totalUpvotesReceived"] = FieldValue.increment(-upvoteCount)
+                }
+
+                // Remove event from attended list
+                updates["eventsAttended"] = FieldValue.arrayRemove(eventId)
+
+                // Single user update (atomic)
+                firestore.collection("users")
+                    .document(memoryOwner)
+                    .update(updates)
+                    .await()
+            }
+
+            // Delete memory document
+            doc.reference.delete().await()
+        }
+
+        // ️Delete the event document itself
+        eventRef.delete().await()
+
+        // Remove from creator’s eventsCreated
+        firestore.collection("users")
+            .document(ownerUid)
+            .update("eventsCreated", FieldValue.arrayRemove(eventId))
+            .await()
+
+        // Cleanup references (favorites / recents)
+        val usersSnap = firestore.collection("users").get().await()
+        for (user in usersSnap.documents) {
+            user.reference.update(
+                mapOf(
+                    "savedEvents" to FieldValue.arrayRemove(eventId),
+                    "recentEvents" to FieldValue.arrayRemove(eventId)
+                )
+            )
+        }
+    }
 }

@@ -56,7 +56,7 @@ fun CreatorInfoSection(
                 Text(
                     creatorUsername ?: "Unknown user",
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Bold
                 )
             }
 

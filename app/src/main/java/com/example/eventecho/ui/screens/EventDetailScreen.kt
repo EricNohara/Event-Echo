@@ -26,8 +26,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
@@ -40,16 +45,19 @@ import com.example.eventecho.ui.components.CreatorInfoSection
 import com.example.eventecho.utils.formatPrettyDate
 import kotlinx.coroutines.launch
 import com.example.eventecho.R
-
+import com.example.eventecho.ui.viewmodels.ProfileViewModel
 
 @Composable
 fun EventDetailScreen(
     navController: NavController,
     repo: EventRepository,
-    eventId: String
+    eventId: String,
+    profileViewModel: ProfileViewModel
 ) {
     var event by remember { mutableStateOf<Event?>(null) }
     var isLoading by remember { mutableStateOf(true) }
+    var showOwnerMenu by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     val uid = FirebaseAuth.getInstance().currentUser?.uid
     val scope = rememberCoroutineScope()
@@ -98,6 +106,7 @@ fun EventDetailScreen(
     }
 
     val e = event!!
+    val isOwner = uid != null && e.source == "user" && e.createdBy == uid
     val formattedDate = formatPrettyDate(e.date)
 
     Scaffold(
@@ -156,6 +165,7 @@ fun EventDetailScreen(
                                 if (isFavorited) repo.addFavoriteEvent(uid, e.id)
                                 else repo.removeFavoriteEvent(uid, e.id)
                             }
+                            profileViewModel.refreshUser()
                         }
                     },
                     modifier = Modifier
@@ -175,57 +185,137 @@ fun EventDetailScreen(
             Spacer(Modifier.height(16.dp))
 
             // --- MAIN CONTENT CARD ---
-            Surface(
+            Box(
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
-                    .fillMaxWidth(),
-                tonalElevation = 3.dp,
-                shape = RoundedCornerShape(20.dp)
+                    .fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    tonalElevation = 3.dp,
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
 
-                    CreatorInfoSection(
-                        source = e.source,
-                        creatorUsername = creatorUsername,
-                        creatorProfileUrl = creatorProfileUrl
-                    )
+                        CreatorInfoSection(
+                            source = e.source,
+                            creatorUsername = creatorUsername,
+                            creatorProfileUrl = creatorProfileUrl
+                        )
 
-                    // Location Chip
-                    if (e.location.isNotBlank()) {
+                        // Location Chip
+                        if (e.location.isNotBlank()) {
+                            AssistChip(
+                                onClick = {},
+                                label = { Text(e.location) },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.LocationOn,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            )
+                        }
+
+                        // Date Chip
                         AssistChip(
                             onClick = {},
-                            label = { Text(e.location) },
+                            label = { Text(formattedDate) },
                             leadingIcon = {
-                                Icon(Icons.Default.LocationOn, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
-                            },
+                                Icon(
+                                    Icons.Default.CalendarMonth,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        )
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 16.dp),
+                            thickness = 1.dp,
+                            color = Color.Gray
+                        )
+
+                        // Description
+                        Text(
+                            text = if (e.description.isNotBlank()) e.description else "No description available",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
+                }
 
-                    // Date Chip
-                    AssistChip(
-                        onClick = {},
-                        label = { Text(formattedDate) },
-                        leadingIcon = {
-                            Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                // --- OWNER OVERFLOW MENU (TOP RIGHT OF CARD) ---
+                if (isOwner) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(12.dp)
+                    ) {
+                        IconButton(onClick = { showOwnerMenu = true }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "Event options"
+                            )
                         }
-                    )
 
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 16.dp),
-                        thickness = 1.dp,
-                        color = Color.Gray
-                    )
+                        DropdownMenu(
+                            expanded = showOwnerMenu,
+                            onDismissRequest = { showOwnerMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Edit Event") },
+                                onClick = {
+                                    showOwnerMenu = false
+//                                    navController.navigate("edit_event/${e.id}")
+                                }
+                            )
 
-                    // Description
-                    Text(
-                        text = if (e.description.isNotBlank()) e.description else "No description available",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
+                            DropdownMenuItem(
+                                text = { Text("Delete Event") },
+                                onClick = {
+                                    showOwnerMenu = false
+                                    showDeleteDialog = true
+                                }
+                            )
+                        }
+                    }
                 }
             }
 
             Spacer(Modifier.height(80.dp))
+        }
+
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text("Delete Event?") },
+                text = { Text("This action cannot be undone.") },
+                confirmButton = {
+                    Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        ),
+                        onClick = {
+                            showDeleteDialog = false
+                            scope.launch {
+                                repo.deleteEvent(e.id, uid!!)
+                                profileViewModel.refreshUser()
+                                snackbarHostState.showSnackbar("Event deleted")
+                                navController.popBackStack()
+                            }
+                        }
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    Button(onClick = { showDeleteDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }
