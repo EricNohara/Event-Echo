@@ -18,6 +18,7 @@ import com.example.eventecho.data.firebase.UserRepository
 import com.example.eventecho.ui.screens.*
 import com.example.eventecho.ui.viewmodels.*
 import com.google.firebase.firestore.FirebaseFirestore
+import com.example.eventecho.ui.screens.EditEventScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -78,6 +79,16 @@ fun AppNavGraph(navController: NavHostController) {
             CreateEventScreen(
                 navController = navController,
                 repo = eventRepo
+            )
+        }
+
+        composable(Routes.EditEvent.route,
+            arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+        ) {
+            EditEventScreen(
+                navController = navController,
+                repo = eventRepo,
+                eventId = it.arguments!!.getString("eventId")!!
             )
         }
 

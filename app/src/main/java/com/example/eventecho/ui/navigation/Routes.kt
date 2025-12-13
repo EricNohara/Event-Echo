@@ -31,4 +31,8 @@ sealed class Routes(val route: String) {
         fun createRoute(eventId: String, userId: String) =
             "memory_view/$eventId/$userId"
     }
+
+    object EditEvent : Routes("edit_event/{eventId}") {
+        fun createRoute(eventId: String) = "edit_event/$eventId"
+    }
 }

@@ -268,7 +268,7 @@ fun EventDetailScreen(
                                 text = { Text("Edit Event") },
                                 onClick = {
                                     showOwnerMenu = false
-//                                    navController.navigate("edit_event/${e.id}")
+                                    navController.navigate("edit_event/${e.id}")
                                 }
                             )
 

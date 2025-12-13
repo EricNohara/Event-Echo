@@ -1,5 +1,6 @@
 package com.example.eventecho.data.firebase
 
+import android.net.Uri
 import android.util.Log
 import com.example.eventecho.data.api.ticketmaster.TicketmasterApi
 import com.example.eventecho.ui.dataclass.Event
@@ -289,5 +290,59 @@ class EventRepository(
                 )
             )
         }
+    }
+
+    // update event
+    suspend fun updateEvent(
+        eventId: String,
+        title: String,
+        description: String,
+        date: String,
+        latitude: Double,
+        longitude: Double,
+        location: String,
+        newImageUri: Uri?,
+        oldImageUrl: String?
+    ) = withContext(Dispatchers.IO) {
+
+        var imageUrl = oldImageUrl ?: ""
+
+        // Replace image if user selected a new one
+        if (newImageUri != null) {
+            // delete old image if it exists
+            if (!oldImageUrl.isNullOrBlank()) {
+                try {
+                    val oldRef = com.google.firebase.storage.FirebaseStorage
+                        .getInstance()
+                        .getReferenceFromUrl(oldImageUrl)
+                    oldRef.delete().await()
+                } catch (_: Exception) {}
+            }
+
+            // upload new image
+            val newRef = com.google.firebase.storage.FirebaseStorage
+                .getInstance()
+                .reference
+                .child("event_images/$eventId/${System.currentTimeMillis()}.jpg")
+
+            newRef.putFile(newImageUri).await()
+            imageUrl = newRef.downloadUrl.await().toString()
+        }
+
+        firestore.collection("events")
+            .document(eventId)
+            .update(
+                mapOf(
+                    "title" to title,
+                    "description" to description,
+                    "date" to date,
+                    "latitude" to latitude,
+                    "longitude" to longitude,
+                    "location" to location,
+                    "imageUrl" to imageUrl,
+                    "updatedAt" to FieldValue.serverTimestamp()
+                )
+            )
+            .await()
     }
 }

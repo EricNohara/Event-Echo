@@ -22,6 +22,7 @@ import com.example.eventecho.R
 @Composable
 fun ImageSelectorCard(
     imageUri: Uri?,
+    existingImageUrl: String? = null,
     isLoading: Boolean,
     onGalleryClick: () -> Unit,
     onCameraClick: () -> Unit,
@@ -38,21 +39,39 @@ fun ImageSelectorCard(
     ) {
 
         when {
-            isLoading -> CircularProgressIndicator()
+            isLoading -> {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
 
-            imageUri != null -> AsyncImage(
-                model = imageUri,
-                contentDescription = "Selected Image",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = androidx.compose.ui.layout.ContentScale.Crop
-            )
+            // Newly selected image (edit or create)
+            imageUri != null -> {
+                AsyncImage(
+                    model = imageUri,
+                    contentDescription = "Selected Image",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                )
+            }
 
-            else -> Image(
-                painter = painterResource(R.drawable.default_image),
-                contentDescription = "Placeholder",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = androidx.compose.ui.layout.ContentScale.Crop
-            )
+            // Existing event image (edit mode)
+            !existingImageUrl.isNullOrBlank() -> {
+                AsyncImage(
+                    model = existingImageUrl,
+                    contentDescription = "Existing Event Image",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                )
+            }
+
+            // Placeholder
+            else -> {
+                Image(
+                    painter = painterResource(R.drawable.default_image),
+                    contentDescription = "Placeholder",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                )
+            }
         }
 
         // Camera Floating Button

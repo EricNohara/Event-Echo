@@ -315,7 +315,9 @@ fun CreateEventBottomBar(
     isLoading: Boolean,
     canCreate: Boolean,
     onCancel: () -> Unit,
-    onCreate: () -> Unit
+    onCreate: () -> Unit,
+    label: String = "Create",
+    labelLoading: String = "Creating..."
 ) {
     Box(
         modifier = Modifier
@@ -345,7 +347,7 @@ fun CreateEventBottomBar(
                 shape = RoundedCornerShape(10.dp),
                 enabled = !isLoading && canCreate
             ) {
-                Text(if (isLoading) "Creating..." else "Create")
+                Text(if (isLoading) labelLoading else label)
             }
         }
     }
