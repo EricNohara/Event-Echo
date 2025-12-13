@@ -48,7 +48,7 @@ fun AppNavGraph(navController: NavHostController) {
     )
 
     // Shared Map ViewModel
-    val mapViewModel = remember { EventMapViewModel(eventRepo) }
+    val mapViewModel = remember { EventMapViewModel(eventRepo, userRepo) }
 
     NavHost(
         navController = navController,

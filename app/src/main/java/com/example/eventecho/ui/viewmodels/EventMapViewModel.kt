@@ -5,10 +5,14 @@ import android.location.Geocoder
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ch.hsr.geohash.GeoHash
 import com.example.eventecho.data.firebase.EventRepository
+import com.example.eventecho.data.firebase.UserRepository
 import com.example.eventecho.ui.components.EventPin
 import com.example.eventecho.ui.dataclass.Event
 import com.google.android.gms.maps.model.LatLng
@@ -23,8 +27,10 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 class EventMapViewModel(
-    private val repo: EventRepository
-) : ViewModel() {
+    private val repo: EventRepository,
+    private val userRepo: UserRepository
+) : ViewModel()
+    {
 
     // --- UI State ---
     private val _events = MutableStateFlow<List<Event>>(emptyList())
@@ -43,12 +49,18 @@ class EventMapViewModel(
     val isLoading: StateFlow<Boolean> = _isLoading
 
     // --- Filters ---
-    var radiusKm: Int = 50
+    var radiusKm: Int = 10
 
     var selectedStartDate: LocalDate? = null
     var selectedEndDate: LocalDate? = null
 
-    private var lastCenter: LatLng? = null
+    var showTicketmasterEvents by mutableStateOf(true)
+    var showUserEvents by mutableStateOf(true)
+    var showCreatedEvents by mutableStateOf(false)
+    var showAttendedEvents by mutableStateOf(false)
+    var showFavoriteEvents by mutableStateOf(false)
+
+    var lastCenter: LatLng? = null
 
     // CAMERA IDLE → LOAD FIRESTORE EVENTS
     @RequiresApi(Build.VERSION_CODES.O)
@@ -82,11 +94,13 @@ class EventMapViewModel(
                 .format(DateTimeFormatter.ISO_INSTANT)
 
             // 3. Sync Ticketmaster → Firestore
-            repo.syncTicketmasterEvents(
-                geoPoint = geoHash,
-                startDateTime = nowIso,
-                radius = radiusKm.toString()
-            )
+            if (showTicketmasterEvents) {
+                repo.syncTicketmasterEvents(
+                    geoPoint = geoHash,
+                    startDateTime = nowIso,
+                    radius = radiusKm.toString()
+                )
+            }
 
             // 4. Load Firestore events
             val allEvents = repo.getEventsFromFirestore()
@@ -112,6 +126,31 @@ class EventMapViewModel(
             Log.e("EventMapVM", "Error refreshing events", e)
             _events.value = emptyList()
             _mapPins.value = emptyList()
+        }
+    }
+
+
+    // Getting user events - AI-Assisted Feature
+    private var userEventsCreated: Set<String> = emptySet() // FIXED/ADDED
+    private var userEventsAttended: Set<String> = emptySet() // FIXED/ADDED
+    private var userEventsFavorite: Set<String> = emptySet() // FIXED/ADDED
+
+    init {
+        viewModelScope.launch {
+            // Load user document
+            val data = userRepo.getUser() ?: return@launch
+
+            userEventsCreated =
+                (data["eventsCreated"] as? List<*>)?.filterIsInstance<String>()?.toSet()
+                    ?: emptySet()
+
+            userEventsAttended =
+                (data["eventsAttended"] as? List<*>)?.filterIsInstance<String>()?.toSet()
+                    ?: emptySet()
+
+            userEventsFavorite =
+                (data["savedEvents"] as? List<*>)?.filterIsInstance<String>()?.toSet()
+                    ?: emptySet()
         }
     }
 
@@ -142,6 +181,26 @@ class EventMapViewModel(
             // If the date is invalid, exclude it so it doesn't break filtering
             return false
         }
+
+        // EVENT SOURCE FILTER
+
+        // Ticketmaster events
+        if (!showTicketmasterEvents && event.source == "ticketmaster") return false
+
+        // User events
+        if (!showUserEvents && event.source == "user") return false
+
+        // CREATED / ATTENDED / FAVORITE FILTER
+        val filtersSelected = listOf(showCreatedEvents, showAttendedEvents, showFavoriteEvents)
+        if (filtersSelected.any { it }) {
+            var passesCustomFilter = false
+            if (showCreatedEvents && userEventsCreated.contains(event.id)) passesCustomFilter = true
+            if (showAttendedEvents && userEventsAttended.contains(event.id)) passesCustomFilter = true
+            if (showFavoriteEvents && userEventsFavorite.contains(event.id)) passesCustomFilter = true
+
+            if (!passesCustomFilter) return false // if none of the selected filters match, exclude event
+        }
+        // if none of the created/attended/favorite filters are selected, do not filter on them
 
         return true
     }

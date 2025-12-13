@@ -1,6 +1,7 @@
 package com.example.eventecho.ui.screens
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Looper
@@ -8,10 +9,13 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.collection.IntList
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
@@ -150,12 +154,25 @@ fun EventMapHomeScreen(
 
     var filterMenuExpanded by remember { mutableStateOf(false) }
 
+    val eventSourceOptions = listOf("Ticketmaster", "Users")
+    val userEventOptions = listOf("Created", "Attended", "Favorites")
+
+    var selectedSources by remember { mutableStateOf(setOf("Ticketmaster", "Users")) }
+    var selectedUserFilters by remember { mutableStateOf(setOf<String>()) }
+
     // --- FILTER EFFECT: radius / startDate / endDate ---
-    LaunchedEffect(radiusState.value, startDateState.value, endDateState.value) {
+    LaunchedEffect(radiusState.value, startDateState.value, endDateState.value, selectedSources, selectedUserFilters) {
 
         viewModel.radiusKm = radiusState.value
         viewModel.selectedStartDate = startDateState.value
         viewModel.selectedEndDate = endDateState.value
+
+        viewModel.showTicketmasterEvents = "Ticketmaster" in selectedSources
+        viewModel.showUserEvents = "Users" in selectedSources
+
+        viewModel.showCreatedEvents = "Created" in selectedUserFilters
+        viewModel.showAttendedEvents = "Attended" in selectedUserFilters
+        viewModel.showFavoriteEvents = "Favorites" in selectedUserFilters
 
         val center = cameraPositionState.position.target
 
@@ -250,7 +267,13 @@ fun EventMapHomeScreen(
                 endDateState = endDateState,
                 searchQuery = searchQuery,
                 filterMenuExpanded = filterMenuExpanded,
-                onExpandMenu = { filterMenuExpanded = it }
+                onExpandMenu = { filterMenuExpanded = it },
+                eventSourceOptions = eventSourceOptions,
+                userEventOptions = userEventOptions,
+                selectedSources = selectedSources,
+                onSelectedSourcesChange = { selectedSources = it },
+                selectedUserFilters = selectedUserFilters,
+                onSelectedUserFiltersChange = { selectedUserFilters = it }
             )
 
             // EVENT LIST
@@ -272,6 +295,12 @@ fun FilterRow(
     searchQuery: MutableState<String>,
     filterMenuExpanded: Boolean,
     onExpandMenu: (Boolean) -> Unit,
+    eventSourceOptions: List<String>,
+    userEventOptions: List<String>,
+    selectedSources: Set<String>,
+    onSelectedSourcesChange: (Set<String>) -> Unit,
+    selectedUserFilters: Set<String>,
+    onSelectedUserFiltersChange: (Set<String>) -> Unit
 ) {
 
     Column(
@@ -335,52 +364,128 @@ fun FilterRow(
                     onDismissRequest = { onExpandMenu(false) },
                     modifier = Modifier
                         .background(MaterialTheme.colorScheme.tertiary)
-                        .padding(16.dp),
                 ) {
-
-                    Text("Radius: ${radiusState.value} miles")
-
-                    Slider(
-                        value = radiusState.value.toFloat(),
-                        onValueChange = { radiusState.value = it.toInt() },
-                        valueRange = 1f..100f,
-                        steps = 99,
-                        colors = SliderDefaults.colors(
-                            thumbColor = MaterialTheme.colorScheme.onTertiary,
-                            activeTrackColor = MaterialTheme.colorScheme.onTertiary,
-                            inactiveTrackColor = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.3f),
-                            activeTickColor = MaterialTheme.colorScheme.onTertiary,
-                            inactiveTickColor = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.2f)
-                        )
-                    )
-
-                    Spacer(Modifier.height(12.dp))
-
-                    Column(
-                        Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Column (
+                        Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
-                        Text("Start Date")
-                        DatePicker(
-                            initialDate = startDateState.value,
-                            onDateSelected = {
-                                startDateState.value = it
-                                if (endDateState.value.isBefore(it)) endDateState.value = it
+
+                        Text("Radius: ${radiusState.value} miles")
+
+                        Slider(
+                            value = radiusState.value.toFloat(),
+                            onValueChange = { radiusState.value = it.toInt() },
+                            valueRange = 1f..100f,
+                            steps = 99,
+                            colors = SliderDefaults.colors(
+                                thumbColor = MaterialTheme.colorScheme.onTertiary,
+                                activeTrackColor = MaterialTheme.colorScheme.onTertiary,
+                                inactiveTrackColor = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.3f),
+                                activeTickColor = MaterialTheme.colorScheme.onTertiary,
+                                inactiveTickColor = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.2f)
+                            )
+                        )
+
+                        Spacer(Modifier.height(4.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceAround
+                        ) {
+                            Column {
+                                Text("Start Date")
+                                DatePicker(
+                                    initialDate = startDateState.value,
+                                    onDateSelected = {
+                                        startDateState.value = it
+                                        if (endDateState.value.isBefore(it)) {
+                                            endDateState.value = it
+                                        }
+                                    }
+                                )
                             }
-                        )
-                    }
 
-                    Spacer(Modifier.height(12.dp))
+                            Column(
+                                horizontalAlignment = Alignment.Start
+                            ) {
+                                Text("End Date")
+                                DatePicker(
+                                    initialDate = endDateState.value,
+                                    onDateSelected = {
+                                        endDateState.value = it
+                                    }
+                                )
+                            }
+                        }
 
-                    Column(
-                        Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("End Date")
-                        DatePicker(
-                            initialDate = endDateState.value,
-                            onDateSelected = { endDateState.value = it }
+                        Spacer(Modifier.height(8.dp))
+
+                        // AI-Assisted Feature: Filter Chips for Event Source & Your Events
+
+                        val chipColors = FilterChipDefaults.filterChipColors(
+                            containerColor = MaterialTheme.colorScheme.tertiary,
+                            labelColor = MaterialTheme.colorScheme.onTertiary,
+
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
                         )
+
+                        Text("Event Sources")
+
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            eventSourceOptions.forEach { option ->
+                                FilterChip(
+                                    selected = option in selectedSources,
+                                    onClick = {
+                                        val updated = selectedSources.toMutableSet()
+                                        if (option in updated) {
+                                            if (updated.size > 1) updated.remove(option)
+                                        } else {
+                                            updated.add(option)
+                                        }
+                                        onSelectedSourcesChange(updated)
+                                    },
+                                    label = { Text(option) },
+                                    colors = chipColors,
+                                    border = BorderStroke(
+                                        1.dp,
+                                        MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.3f)
+                                    )
+                                )
+                            }
+                        }
+
+                        Spacer(Modifier.height(4.dp))
+
+                        Text("Your Events")
+
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            userEventOptions.forEach { option ->
+                                FilterChip(
+                                    selected = option in selectedUserFilters,
+                                    onClick = {
+                                        val updated = selectedUserFilters.toMutableSet()
+                                        if (option in updated) {
+                                            updated.remove(option)
+                                        } else {
+                                            updated.add(option)
+                                        }
+                                        onSelectedUserFiltersChange(updated)
+                                    },
+                                    label = { Text(option) },
+                                    colors = chipColors,
+                                    border = BorderStroke(
+                                        1.dp,
+                                        MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.3f)
+                                    )
+                                )
+                            }
+                        }
                     }
                 }
             }
