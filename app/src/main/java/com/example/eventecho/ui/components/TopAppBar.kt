@@ -46,8 +46,10 @@ fun TopBar(
             currentRoute == Routes.EditProfile.route ||
             currentRoute == Routes.CreatedEvents.route ||
             currentRoute == Routes.AttendedEvents.route ||
-            currentRoute == Routes.MemoryView.route
+            currentRoute == Routes.MemoryView.route ||
+            currentRoute == Routes.EditEvent.route
 
+    // Override title based on route
     val overrideTitle = when (currentRoute) {
         Routes.AddToMemoryWall.route -> "Add Memory"
         Routes.MemoryWall.route -> "Memory Wall"
@@ -58,6 +60,7 @@ fun TopBar(
         Routes.MemoryView.route -> "Memory Details"
         Routes.EventDetail.route -> "Event Details"
         Routes.CreateEvent.route -> "Create Event"
+        Routes.EditEvent.route -> "Edit Event"
         else -> "EventEcho"  // default global title
     }
 
