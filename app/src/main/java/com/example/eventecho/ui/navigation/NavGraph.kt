@@ -58,7 +58,7 @@ fun AppNavGraph(navController: NavHostController) {
 
         // ---------------------- AUTH ----------------------
         composable(Routes.SignIn.route) {
-            SignInScreen(navController)
+            SignInScreen(navController, userViewModel, profileViewModel)
         }
 
         composable(Routes.SignUp.route) {

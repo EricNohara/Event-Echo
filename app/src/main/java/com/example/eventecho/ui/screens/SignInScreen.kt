@@ -22,10 +22,17 @@ import com.google.firebase.auth.FirebaseAuth
 import com.example.eventecho.ui.navigation.Routes
 import com.example.eventecho.ui.components.SimpleTextField
 import com.example.eventecho.ui.theme.DarkPrimary
+import com.example.eventecho.ui.viewmodels.ProfileViewModel
+import com.example.eventecho.ui.viewmodels.UserViewModel
+
 
 
 @Composable
-fun SignInScreen(navController: NavController) {
+fun SignInScreen(
+    navController: NavController,
+    userViewModel: UserViewModel,
+    profileViewModel: ProfileViewModel
+) {
     val auth = FirebaseAuth.getInstance()
     val user = auth.currentUser
 
@@ -139,6 +146,11 @@ fun SignInScreen(navController: NavController) {
                                         .addOnCompleteListener { task ->
                                             if (task.isSuccessful) {
                                                 error = null
+
+                                                // Refresh user data
+                                                userViewModel.refreshUser()
+                                                profileViewModel.refreshUser()
+
                                                 navController.navigate(Routes.EventMapHome.route) {
                                                     popUpTo(Routes.SignIn.route) { inclusive = true }
                                                 }
