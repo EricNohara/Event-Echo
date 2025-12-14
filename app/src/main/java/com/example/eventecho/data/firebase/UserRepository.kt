@@ -13,10 +13,10 @@ class UserRepository {
     private val db = Firebase.firestore
     private val storage = Firebase.storage
 
-    /** Safely return UID or null */
+    // Safely return UID or null
     fun getUid(): String? = FirebaseAuth.getInstance().currentUser?.uid
 
-    /** CREATE USER DOCUMENT AFTER SIGNUP */
+    // CREATE USER DOCUMENT AFTER SIGNUP
     fun createUser(uid: String, email: String, username: String) {
         val userData = mapOf(
             "email" to email,
@@ -34,28 +34,28 @@ class UserRepository {
         db.collection("users").document(uid).set(userData)
     }
 
-    /** FETCH USER PROFILE (safe if no user logged in) */
+    // FETCH USER PROFILE (safe if no user logged in)
     suspend fun getUser(): Map<String, Any>? {
         val uid = getUid() ?: return null
         val snapshot = db.collection("users").document(uid).get().await()
         return snapshot.data
     }
 
-    /** UPDATE TEXT FIELDS (safe) */
+    // UPDATE TEXT FIELDS (safe)
     fun updateUserFields(username: String, bio: String) {
         val uid = getUid() ?: return
         db.collection("users").document(uid)
             .update("username", username, "bio", bio)
     }
 
-    /** UPDATE PROFILE PICTURE URL IN FIRESTORE */
+    // UPDATE PROFILE PICTURE URL IN FIRESTORE
     fun updateProfilePic(url: String) {
         val uid = getUid() ?: return
         db.collection("users").document(uid)
             .update("profilePicUrl", url)
     }
 
-    /** UPLOAD PROFILE PICTURE TO STORAGE */
+    // UPLOAD PROFILE PICTURE TO STORAGE
     fun uploadProfilePicture(
         imageUri: Uri,
         onSuccess: (String) -> Unit,
@@ -95,5 +95,15 @@ class UserRepository {
             .document(userId)
             .update("totalUpvotesReceived", newTotal)
             .await()
+    }
+
+    // get all users
+    suspend fun getAllUsers(): List<Pair<String, Map<String, Any>>> {
+        val snapshot = db.collection("users").get().await()
+
+        return snapshot.documents.mapNotNull { doc ->
+            val data = doc.data ?: return@mapNotNull null
+            doc.id to data
+        }
     }
 }

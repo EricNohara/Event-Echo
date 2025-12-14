@@ -13,6 +13,7 @@ sealed class Routes(val route: String) {
     object AttendedEvents : Routes("attended_events")
     object MapFullScreen : Routes("map_full_screen")
     object Profile: Routes("profile")
+    object Leaderboard: Routes("leaderboard")
 
     // dynamic routes
     object EventDetail : Routes("event_detail/{eventId}") {

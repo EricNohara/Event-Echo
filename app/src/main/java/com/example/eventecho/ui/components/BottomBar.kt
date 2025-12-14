@@ -18,11 +18,15 @@ import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.material.icons.filled.Leaderboard
+import androidx.compose.material.icons.outlined.EmojiEvents
+import androidx.compose.material.icons.outlined.Leaderboard
 
 @Composable
 fun BottomBar(navController: NavController) {
@@ -89,6 +93,24 @@ fun BottomBar(navController: NavController) {
                 )
             },
             label = { Text("Create") },
+            colors = itemColors
+        )
+
+        // LEADERBOARD
+        NavigationBarItem(
+            selected = currentRoute == Routes.Leaderboard.route,
+            onClick = { navController.navigate(Routes.Leaderboard.route) },
+            icon = {
+                Icon(
+                    imageVector =
+                        if (currentRoute == Routes.Leaderboard.route)
+                            Icons.Filled.EmojiEvents
+                        else
+                            Icons.Outlined.EmojiEvents,
+                    contentDescription = "Leaders"
+                )
+            },
+            label = { Text("Leaders") },
             colors = itemColors
         )
 
