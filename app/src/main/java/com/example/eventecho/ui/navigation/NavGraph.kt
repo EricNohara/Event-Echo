@@ -74,6 +74,11 @@ fun AppNavGraph(navController: NavHostController) {
             MapFullScreen(navController, mapViewModel)
         }
 
+        // ---------------------- LEADERBOARD ----------------------
+        composable(Routes.Leaderboard.route) {
+            LeaderboardScreen()
+        }
+
         // ---------------------- EVENTS ----------------------
         composable(Routes.CreateEvent.route) {
             CreateEventScreen(
