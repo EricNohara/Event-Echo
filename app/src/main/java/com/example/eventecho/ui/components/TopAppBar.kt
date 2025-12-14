@@ -61,6 +61,8 @@ fun TopBar(
         Routes.EventDetail.route -> "Event Details"
         Routes.CreateEvent.route -> "Create Event"
         Routes.EditEvent.route -> "Edit Event"
+        Routes.Profile.route -> "Profile"
+        Routes.Leaderboard.route -> "Leaderboard"
         else -> "EventEcho"  // default global title
     }
 
