@@ -3,6 +3,7 @@ package com.example.eventecho.ui.screens
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Looper
 import android.util.Log
@@ -39,13 +40,32 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.rememberCameraPositionState
 import java.time.LocalDate
 import com.example.eventecho.ui.dataclass.Event
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.adaptive.calculateStandardPaneScaffoldDirective
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.ui.platform.LocalConfiguration
+import com.google.maps.android.compose.CameraPositionState
 
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EventMapHomeScreen(
     navController: NavController,
     viewModel: EventMapViewModel
 ) {
+    // for device detection
+    val adaptiveInfo = currentWindowAdaptiveInfo()
+    val scaffoldDirective = calculateStandardPaneScaffoldDirective(adaptiveInfo)
+    val configuration = LocalConfiguration.current
+    val isPortrait = configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+    val isTablet = configuration.smallestScreenWidthDp >= 600
+    val useSplitLayout = isTablet && !isPortrait
+
+    val mapHeight = when {
+        isTablet && isPortrait -> 500.dp
+        else -> 300.dp
+    }
+
     val context = LocalContext.current
 
     val events by viewModel.events.collectAsState()
@@ -204,83 +224,102 @@ fun EventMapHomeScreen(
     }
 
     // --- UI ---
-    Scaffold {
-        Column(Modifier.fillMaxSize()) {
-
-            // MAP VIEW
-            Box(
+    Scaffold { padding ->
+        if (useSplitLayout) {
+            // TABLET LAYOUT
+            Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(300.dp)
+                    .fillMaxSize(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                EventMap(
-                    cameraPositionState = cameraPositionState,
-                    events = mapPins,
-                    isMyLocationEnabled = permissionGranted,
-                    onMarkerClick = { pin ->
-                        navController.navigate("event_detail/${pin.id}")
-                    },
-                    onMapLoaded = { mapLoaded = true }
-                )
 
-                val userLocationState by viewModel.userLocation.collectAsState()
-
-                Box(Modifier.align(Alignment.TopCenter)) {
-                    MapSearchBar(
-                        userLat = userLocationState?.latitude ?: 0.0,
-                        userLng = userLocationState?.longitude ?: 0.0,
-                        onSearch = { queryString ->
-                            viewModel.performSearch(queryString, context)
-                        }
+                // LEFT: MAP + SEARCH
+                Column(
+                    modifier = Modifier
+                        .weight(0.5f)
+                        .fillMaxHeight()
+                ) {
+                    MapSection(
+                        navController = navController,
+                        viewModel = viewModel,
+                        cameraPositionState = cameraPositionState,
+                        permissionGranted = permissionGranted,
+                        fetchLocation = { fetchLocation() },
+                        isLoading = isLoading,
+                        onMapLoaded = { mapLoaded = true },
+                        modifier = Modifier
+                            .weight(0.5f)
+                            .fillMaxHeight()
                     )
                 }
 
-                IconButton(
-                    onClick = { fetchLocation() },
+                // RIGHT: FILTERS + EVENT GRID
+                Column(
                     modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(bottom = 16.dp, start = 16.dp)
-                        .background(
-                            MaterialTheme.colorScheme.surface,
-                            MaterialTheme.shapes.medium
-                        )
+                        .weight(0.5f)
+                        .fillMaxHeight()
                 ) {
-                    Icon(Icons.Default.MyLocation, "Current Location")
-                }
+                    FilterRow(
+                        radiusState = radiusState,
+                        startDateState = startDateState,
+                        endDateState = endDateState,
+                        searchQuery = searchQuery,
+                        filterMenuExpanded = filterMenuExpanded,
+                        onExpandMenu = { filterMenuExpanded = it },
+                        eventSourceOptions = eventSourceOptions,
+                        userEventOptions = userEventOptions,
+                        selectedSources = selectedSources,
+                        onSelectedSourcesChange = { selectedSources = it },
+                        selectedUserFilters = selectedUserFilters,
+                        onSelectedUserFiltersChange = { selectedUserFilters = it }
+                    )
 
-                if (isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.35f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimaryContainer)
-                    }
+                    Spacer(Modifier.height(8.dp))
+
+                    EventGrid(
+                        navController = navController,
+                        events = filteredEvents
+                    )
                 }
             }
 
-            // FILTER ROW
-            FilterRow(
-                radiusState = radiusState,
-                startDateState = startDateState,
-                endDateState = endDateState,
-                searchQuery = searchQuery,
-                filterMenuExpanded = filterMenuExpanded,
-                onExpandMenu = { filterMenuExpanded = it },
-                eventSourceOptions = eventSourceOptions,
-                userEventOptions = userEventOptions,
-                selectedSources = selectedSources,
-                onSelectedSourcesChange = { selectedSources = it },
-                selectedUserFilters = selectedUserFilters,
-                onSelectedUserFiltersChange = { selectedUserFilters = it }
-            )
+        } else {
+            // PHONE LAYOUT
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                MapSection(
+                    navController = navController,
+                    viewModel = viewModel,
+                    cameraPositionState = cameraPositionState,
+                    permissionGranted = permissionGranted,
+                    fetchLocation = { fetchLocation() },
+                    isLoading = isLoading,
+                    onMapLoaded = { mapLoaded = true },
+                    modifier = Modifier.height(mapHeight)
+                )
 
-            // EVENT LIST
-            EventGrid(
-                navController = navController,
-                events = filteredEvents
-            )
+                FilterRow(
+                    radiusState = radiusState,
+                    startDateState = startDateState,
+                    endDateState = endDateState,
+                    searchQuery = searchQuery,
+                    filterMenuExpanded = filterMenuExpanded,
+                    onExpandMenu = { filterMenuExpanded = it },
+                    eventSourceOptions = eventSourceOptions,
+                    userEventOptions = userEventOptions,
+                    selectedSources = selectedSources,
+                    onSelectedSourcesChange = { selectedSources = it },
+                    selectedUserFilters = selectedUserFilters,
+                    onSelectedUserFiltersChange = { selectedUserFilters = it }
+                )
+
+                EventGrid(
+                    navController = navController,
+                    events = filteredEvents
+                )
+            }
         }
     }
 }
@@ -420,7 +459,6 @@ fun FilterRow(
                         Spacer(Modifier.height(8.dp))
 
                         // AI-Assisted Feature: Filter Chips for Event Source & Your Events
-
                         val chipColors = FilterChipDefaults.filterChipColors(
                             containerColor = MaterialTheme.colorScheme.tertiary,
                             labelColor = MaterialTheme.colorScheme.onTertiary,
@@ -488,6 +526,73 @@ fun FilterRow(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+// composable for the map section of the screen
+@Composable
+fun MapSection(
+    navController: NavController,
+    viewModel: EventMapViewModel,
+    cameraPositionState: CameraPositionState,
+    permissionGranted: Boolean,
+    fetchLocation: () -> Unit,
+    isLoading: Boolean,
+    onMapLoaded: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val userLocation by viewModel.userLocation.collectAsState()
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+    ) {
+        EventMap(
+            cameraPositionState = cameraPositionState,
+            events = viewModel.mapPins.collectAsState().value,
+            isMyLocationEnabled = permissionGranted,
+            onMarkerClick = { pin ->
+                navController.navigate("event_detail/${pin.id}")
+            },
+            onMapLoaded = onMapLoaded
+        )
+
+        Box(Modifier.align(Alignment.TopCenter)) {
+            MapSearchBar(
+                userLat = userLocation?.latitude ?: 0.0,
+                userLng = userLocation?.longitude ?: 0.0,
+                onSearch = { query ->
+                    viewModel.performSearch(query, context)
+                }
+            )
+        }
+
+        IconButton(
+            onClick = fetchLocation,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(16.dp)
+                .background(
+                    MaterialTheme.colorScheme.surface,
+                    MaterialTheme.shapes.medium
+                )
+        ) {
+            Icon(Icons.Default.MyLocation, contentDescription = "Current Location")
+        }
+
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.35f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             }
         }
     }
