@@ -95,11 +95,9 @@ fun MemoryWallScreen(
 
         Column(
             modifier = Modifier
-                .padding(padding)
-                .padding(12.dp)
+                .padding(16.dp)
                 .fillMaxSize()
         ) {
-
             // FILTER ROW
             FilterRow(
                 searchQuery = searchQuery,
@@ -108,7 +106,7 @@ fun MemoryWallScreen(
                 onSortOptionChange = { sortOption = it }
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
 
             // GRID
             LazyVerticalGrid(
