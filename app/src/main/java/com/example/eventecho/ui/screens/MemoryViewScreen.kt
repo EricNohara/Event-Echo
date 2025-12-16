@@ -6,10 +6,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ThumbUp
-import androidx.compose.material.icons.filled.ThumbDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,13 +26,15 @@ import com.example.eventecho.utils.timeAgo
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.example.eventecho.ui.viewmodels.ProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MemoryViewScreen(
     navController: NavController,
+    profileViewModel: ProfileViewModel,
     eventId: String,
-    memoryOwnerId: String
+    memoryOwnerId: String,
 ) {
     val scrollState = rememberScrollState()
 
@@ -138,7 +138,10 @@ fun MemoryViewScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     IconButton(
-                        onClick = { viewModel.toggleUpvote(eventId, memoryOwnerId) },
+                        onClick = {
+                            viewModel.toggleUpvote(eventId, memoryOwnerId)
+                            profileViewModel.refreshUser()
+                        },
                         modifier = Modifier.size(48.dp)
                     ) {
                         Icon(

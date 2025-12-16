@@ -77,7 +77,7 @@ class EventMapViewModel(
         }
     }
 
-    // FULL PIPELINE: Ticketmaster → Firestore → Filter → Pins
+    // FULL PIPELINE: Ticketmaster, Firestore, Filter, Pins
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun refreshEvents(center: LatLng) {
         try {
