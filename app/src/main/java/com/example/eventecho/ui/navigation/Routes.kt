@@ -9,7 +9,11 @@ sealed class Routes(val route: String) {
     object CreateEvent : Routes("create_event")
     object EditProfile : Routes("edit_profile")
     object SavedEvents : Routes("saved_events")
+    object CreatedEvents : Routes("created_events")
+    object AttendedEvents : Routes("attended_events")
     object MapFullScreen : Routes("map_full_screen")
+    object Profile: Routes("profile")
+    object Leaderboard: Routes("leaderboard")
 
     // dynamic routes
     object EventDetail : Routes("event_detail/{eventId}") {
@@ -22,5 +26,14 @@ sealed class Routes(val route: String) {
 
     object AddToMemoryWall : Routes("add_memory/{eventId}") {
         fun createRoute(eventId: String) = "add_memory/$eventId"
+    }
+
+    object MemoryView : Routes("memory_view/{eventId}/{userId}") {
+        fun createRoute(eventId: String, userId: String) =
+            "memory_view/$eventId/$userId"
+    }
+
+    object EditEvent : Routes("edit_event/{eventId}") {
+        fun createRoute(eventId: String) = "edit_event/$eventId"
     }
 }
