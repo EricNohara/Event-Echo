@@ -19,6 +19,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 
+// Limited Text Field composable
 @Composable
 fun LimitedTextField(
     value: String,
@@ -62,6 +63,7 @@ fun LimitedTextField(
     }
 }
 
+// Simple Text Field composable
 @Composable
 fun SimpleTextField(
     value: String,

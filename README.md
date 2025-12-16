@@ -9,7 +9,7 @@
 
 ## Documentation
 
-Please find our documentation (Final Report with AI Reflection, Presentation Slides, Application Screenshots, Architecture Diagram, Progress Chart, ...) in the /doc directory.
+Please find our documentation (Final Report with AI Reflection, Presentation Slides, Application Screenshots, Architecture Diagram, Progress Chart, ...) in the /Doc directory.
 
 You can find our working files in this [Shared Drive](https://drive.google.com/drive/folders/15LC87y1itksHIRGUsOX4qBqt_M4nZjGB?usp=sharing)
 

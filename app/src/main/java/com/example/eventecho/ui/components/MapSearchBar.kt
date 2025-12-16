@@ -65,10 +65,12 @@ fun MapSearchBar(
     onSearch: (String) -> Unit,
     dropdownMaxHeight: Dp = 150.dp
 ) {
+    // Repo
     val context = LocalContext.current
     val repo = remember { PlacesRepository(context) }
 
     var text by remember { mutableStateOf("") }
+    // Mutable list of suggestions from Places API
     var suggestions by remember { mutableStateOf(listOf<PlaceSuggestion>()) }
 
     val focusManager = LocalFocusManager.current

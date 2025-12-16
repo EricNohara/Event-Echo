@@ -31,6 +31,7 @@ fun AddToMemoryWallScreen(
     navController: NavController,
     eventId: String
 ) {
+    // Memory & User repositories
     val memoryRepo = remember {
         MemoryRepository(
             db = FirebaseFirestore.getInstance(),

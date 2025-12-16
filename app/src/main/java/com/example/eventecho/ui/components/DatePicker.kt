@@ -30,11 +30,14 @@ fun DatePicker(
     initialDate: LocalDate = LocalDate.now(),
     onDateSelected: (LocalDate) -> Unit
 ) {
+    // Get date from input
     var selectedDate by remember { mutableStateOf(initialDate) }
 
+    // Reformat to MM/DD/YYYY
     val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
     val dateString = selectedDate.format(formatter)
 
+    // Initialize DatePickerDialog with relevant values
     val context = LocalContext.current
     val datePickerDialog = DatePickerDialog(
         context,
@@ -55,6 +58,7 @@ fun DatePicker(
         contentPadding = PaddingValues(12.dp, 16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            // Calendar Icon & Date String
             Icon(
                 imageVector = Icons.Filled.CalendarToday,
                 contentDescription = "Calendar Icon"

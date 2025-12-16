@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.eventecho.ui.components.MemoryCard
 import com.example.eventecho.ui.viewmodels.MemoryWallViewModel
 import com.example.eventecho.ui.viewmodels.MemoryWallViewModelFactory
 import com.google.firebase.firestore.FirebaseFirestore

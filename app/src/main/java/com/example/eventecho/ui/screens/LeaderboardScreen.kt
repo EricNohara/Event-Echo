@@ -47,6 +47,7 @@ fun LeaderboardScreen() {
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        // Display Filter Dropdown
         LeaderboardFilterDropdown(
             selected = ui.filter,
             onSelected = viewModel::setFilter
@@ -62,6 +63,7 @@ fun LeaderboardScreen() {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimaryContainer)
             }
         } else {
+            // Display Leaderboard
             LazyColumn {
                 items(ui.users.size) { index ->
                     LeaderboardRow(
@@ -122,6 +124,7 @@ fun LeaderboardFilterDropdown(
             )
         )
 
+        // Exposed dropdown to select which filter to use for leaderboard
         ExposedDropdownMenu(expanded, onDismissRequest = { expanded = false }) {
             LeaderboardFilter.values().forEach {
                 DropdownMenuItem(
@@ -152,6 +155,7 @@ fun LeaderboardRow(
 ) {
     val borderModifier =
         if (rank == 1) {
+            // Unique card for rank 1
             Modifier.border(
                 width = 2.dp,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -161,6 +165,7 @@ fun LeaderboardRow(
             Modifier
         }
 
+    // Card to display leaderboard info for user and filter
     Card(
         modifier = Modifier
             .fillMaxWidth()

@@ -40,6 +40,7 @@ fun BottomBar(navController: NavController) {
         val selectedColor = MaterialTheme.colorScheme.onPrimaryContainer
         val unselectedColor = MaterialTheme.colorScheme.onPrimary
 
+        // Custom color scheme for Bottom Bar navigation buttons
         val itemColors = NavigationBarItemDefaults.colors(
             selectedIconColor = selectedColor,
             selectedTextColor = selectedColor,

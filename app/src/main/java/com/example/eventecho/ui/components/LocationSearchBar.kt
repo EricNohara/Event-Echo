@@ -55,9 +55,11 @@ fun LocationSearchBar(
     dropdownMaxHeight: Dp = 180.dp,
     enabled: Boolean = true
 ) {
+    // Repo
     val context = LocalContext.current
     val repo = remember { PlacesRepository(context) }
 
+    // Mutable list of suggestions from Places API
     var suggestions by remember { mutableStateOf(listOf<PlaceSuggestion>()) }
 
     val focusManager = LocalFocusManager.current

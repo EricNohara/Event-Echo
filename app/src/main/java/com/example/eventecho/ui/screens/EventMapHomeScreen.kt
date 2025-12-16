@@ -154,13 +154,15 @@ fun EventMapHomeScreen(
 
     var filterMenuExpanded by remember { mutableStateOf(false) }
 
+    // Options & Lists for Boolean filters to pull from
     val eventSourceOptions = listOf("Ticketmaster", "Users")
     val userEventOptions = listOf("Created", "Attended", "Favorites")
 
     var selectedSources by remember { mutableStateOf(setOf("Ticketmaster", "Users")) }
     var selectedUserFilters by remember { mutableStateOf(setOf<String>()) }
 
-    // --- FILTER EFFECT: radius / startDate / endDate ---
+    // --- FILTER EFFECT: radius / startDate / endDate / Selected Sources/User Filters ---
+    // When any of these are changed, the displayed events are refreshed.
     LaunchedEffect(radiusState.value, startDateState.value, endDateState.value, selectedSources, selectedUserFilters) {
 
         viewModel.radiusKm = radiusState.value
@@ -204,7 +206,7 @@ fun EventMapHomeScreen(
     }
 
     // --- UI ---
-    Scaffold {
+    Scaffold { innerPadding ->
         Column(Modifier.fillMaxSize()) {
 
             // MAP VIEW
@@ -359,6 +361,7 @@ fun FilterRow(
                     Text("Filters")
                 }
 
+                // Dropdown expands when filter is clicked
                 DropdownMenu(
                     expanded = filterMenuExpanded,
                     onDismissRequest = { onExpandMenu(false) },
@@ -368,12 +371,15 @@ fun FilterRow(
                     Column (
                         Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
-
+                        // Radius adjustment slider
                         Text("Radius: ${radiusState.value} miles")
 
                         Slider(
                             value = radiusState.value.toFloat(),
-                            onValueChange = { radiusState.value = it.toInt() },
+                            onValueChange = {
+                                radiusState.value = it.toInt()
+                                Log.i("EventMapHomeScreen", "Radius filter changed to $it")
+                                            },
                             valueRange = 1f..100f,
                             steps = 99,
                             colors = SliderDefaults.colors(
@@ -387,6 +393,7 @@ fun FilterRow(
 
                         Spacer(Modifier.height(4.dp))
 
+                        // Start & End Dates
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceAround
@@ -397,8 +404,10 @@ fun FilterRow(
                                     initialDate = startDateState.value,
                                     onDateSelected = {
                                         startDateState.value = it
+                                        Log.i("EventMapHomeScreen", "Start Date filter changed to $it")
                                         if (endDateState.value.isBefore(it)) {
                                             endDateState.value = it
+                                            Log.i("EventMapHomeScreen", "(End Date automatically updated to $it)")
                                         }
                                     }
                                 )
@@ -412,6 +421,7 @@ fun FilterRow(
                                     initialDate = endDateState.value,
                                     onDateSelected = {
                                         endDateState.value = it
+                                        Log.i("EventMapHomeScreen", "End Date filter changed to $it")
                                     }
                                 )
                             }
@@ -420,6 +430,8 @@ fun FilterRow(
                         Spacer(Modifier.height(8.dp))
 
                         // AI-Assisted Feature: Filter Chips for Event Source & Your Events
+                        // When clicked, toggle on or off boolean filter.
+                        // AI code needed major suggestions, especially in integrating with viewModel and theme.
 
                         val chipColors = FilterChipDefaults.filterChipColors(
                             containerColor = MaterialTheme.colorScheme.tertiary,
@@ -439,11 +451,16 @@ fun FilterRow(
                                 FilterChip(
                                     selected = option in selectedSources,
                                     onClick = {
+                                        Log.i("EventMapHomeScreen", "FilterChip $option clicked")
                                         val updated = selectedSources.toMutableSet()
                                         if (option in updated) {
-                                            if (updated.size > 1) updated.remove(option)
+                                            if (updated.size > 1) {
+                                                updated.remove(option)
+                                                Log.i("EventMapHomeScreen", "Filter $option removed")
+                                            }
                                         } else {
                                             updated.add(option)
+                                            Log.i("EventMapHomeScreen", "Filter $option added")
                                         }
                                         onSelectedSourcesChange(updated)
                                     },
@@ -469,11 +486,14 @@ fun FilterRow(
                                 FilterChip(
                                     selected = option in selectedUserFilters,
                                     onClick = {
+                                        Log.i("EventMapHomeScreen", "FilterChip $option clicked")
                                         val updated = selectedUserFilters.toMutableSet()
                                         if (option in updated) {
                                             updated.remove(option)
+                                            Log.i("EventMapHomeScreen", "Filter $option removed")
                                         } else {
                                             updated.add(option)
+                                            Log.i("EventMapHomeScreen", "Filter $option added")
                                         }
                                         onSelectedUserFiltersChange(updated)
                                     },

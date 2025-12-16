@@ -106,6 +106,7 @@ fun TopBar(
                 }
             }
 
+            // Profile menu dropdown
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }

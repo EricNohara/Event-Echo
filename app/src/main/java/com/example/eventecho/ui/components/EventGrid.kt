@@ -30,12 +30,14 @@ import com.example.eventecho.utils.timeAgo
 import com.example.eventecho.utils.timeAgoOrAhead
 import com.example.eventecho.ui.theme.EventEchoTitleFont
 
-
+// AI-Assisted Feature: Converting now-removed EventList display composable into a grid with cards on left and right.
+// Many adjustments and refactoring needed from AI suggestions, in theme integration.
 @Composable
 fun EventGrid(
     navController: NavController,
     events: List<Event>
 ) {
+    // Display as a LazyColumn with rows of cards on each side
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -107,7 +109,7 @@ fun EventCardSmall(
                     .height(100.dp)
             ) {
                 val imageModel: Any =
-                    if (event.imageUrl.isNullOrBlank()) R.drawable.default_image else event.imageUrl
+                    if (event.imageUrl.isBlank()) R.drawable.default_image else event.imageUrl
 
                 AsyncImage(
                     model = imageModel,

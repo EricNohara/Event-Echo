@@ -37,6 +37,7 @@ fun EditProfileScreen(
     // --- IMAGE PICKERS ---
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
 
+    // Helper function for creating temp image URI from file
     fun createTempImageUri(): Uri {
         val imageFile = File(
             context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
@@ -94,6 +95,7 @@ fun EditProfileScreen(
         ) {
             Spacer(Modifier.height(20.dp))
 
+            // Select Image from Gallery or Camera
             ImageSelectorCard(
                 imageUri = uiState.profilePicUrl?.let { Uri.parse(it) },
                 isLoading = uiState.uploadingPicture,
@@ -110,6 +112,7 @@ fun EditProfileScreen(
 
             Spacer(Modifier.height(28.dp))
 
+            // Display Name
             SimpleTextField(
                 value = uiState.username,
                 onValueChange = viewModel::onUsernameChange,
@@ -118,6 +121,7 @@ fun EditProfileScreen(
 
             Spacer(Modifier.height(16.dp))
 
+            // Bio
             LimitedTextField(
                 value = uiState.bio,
                 onValueChange = viewModel::onBioChange,

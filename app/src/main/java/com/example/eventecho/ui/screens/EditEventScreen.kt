@@ -36,6 +36,7 @@ fun EditEventScreen(
     repo: EventRepository,
     eventId: String
 ) {
+    // App, viewModel, & UI
     val context = LocalContext.current
     val app = context.applicationContext as Application
 
@@ -48,6 +49,7 @@ fun EditEventScreen(
     // CAMERA SUPPORT
     var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
 
+    // Helper function for creating an image URI from file
     fun createImageUri(): Uri {
         val imageFile = File(
             context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
@@ -104,6 +106,7 @@ fun EditEventScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
+            // Select Image from Gallery or Camera
             ImageSelectorCard(
                 imageUri = ui.imageUri,
                 existingImageUrl = ui.existingImageUrl,
@@ -118,6 +121,7 @@ fun EditEventScreen(
 
             Spacer(Modifier.height(16.dp))
 
+            // Use Current Location checkbox
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -136,6 +140,7 @@ fun EditEventScreen(
                 Text("Use Current Location")
             }
 
+            // Location Search Bar
             LocationSearchBar(
                 locationName = ui.locationName,
                 onLocationNameChange = {
@@ -153,6 +158,7 @@ fun EditEventScreen(
 
             Spacer(Modifier.height(12.dp))
 
+            // Event Title & Date
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -174,6 +180,7 @@ fun EditEventScreen(
 
             Spacer(Modifier.height(12.dp))
 
+            // Event Description
             LimitedTextField(
                 value = ui.description,
                 onValueChange = viewModel::onDescriptionChange,

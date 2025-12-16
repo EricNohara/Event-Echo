@@ -65,6 +65,8 @@ fun MemoryTile(
                     )
                 )
         ) {
+
+            // Memory username & upvote
             Row(
                 modifier = Modifier
                     .padding(8.dp)
