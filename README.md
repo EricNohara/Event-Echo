@@ -16,16 +16,17 @@ Please find our documentation (Final Report with AI Reflection, Presentation Sli
 ## Table of Contents
 
 1. [Project Overview](#project-overview)
-2. [Build/Run Instructions](#buildrun-instructions)
-3. [App Flow](#app-flow)
-4. [Target Users & Problem Being Solved](#target-users--problem-being-solved)
-5. [Current Features](#current-features)
-6. [Planned Features](#planned-features)
+2. [Repository Contents](#repository-contents)
+3. [Build/Run Instructions](#buildrun-instructions)
+4. [App Flow](#app-flow)
+5. [Target Users & Problem Being Solved](#target-users--problem-being-solved)
+6. [Current Features](#current-features)
+7. [Planned Features](#planned-features)
    - [Stretch Goals](#stretch-goals-descoped)
-7. [APIs & Sensors](#apis--sensors)
-8. [Feature List](#feature-list)
-9. [Testing Strategy](#testing-strategy)
-10. [Team Roles & Responsibilities](#team-roles--responsibilities)
+8. [APIs & Sensors](#apis--sensors)
+9. [Feature List](#feature-list)
+10. [Testing Strategy](#testing-strategy)
+11. [Team Roles & Responsibilities](#team-roles--responsibilities)
 
 
 ---
@@ -42,9 +43,28 @@ Additionally, users can **upvote or downvote** contributions, with the best ones
 
 ---
 
+## Repository Contents
+
+This repository contains:
+- Source code for Event Echo app
+- README for app
+- Documentation resource directory containing:
+   - MVVM architecture diagram
+   - Navigation flow diagram
+   - Firebase schema examples
+   - Video demo
+   - App screenshots
+   - Final project presentation slides
+   - Final report (with AI usage statement)
+
+---
+
 ## Build/Run Instructions
 
 1. **Download/Clone** this repository.
+```
+git clone https://github.com/EricNohara/Event-Echo.git
+```
 2. Open the project folder in **Android Studio** (download Android Studio if not installed).
 3. **Sync** the project using **gradle** (Either automatically on startup or after).
 4. Obtain **API keys** for **Google Maps**, **Ticketmaster,** and **Places**, and set them in the project's **local.properties** as **TICKETMASTER_API_KEY**, **MAPS_API_KEY**, and **PLACES_API_KEY**.
