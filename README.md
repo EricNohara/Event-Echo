@@ -11,6 +11,11 @@
 
 Please find our documentation (Final Report with AI Reflection, Presentation Slides, Application Screenshots, Architecture Diagram, Progress Chart, ...) in the /doc directory.
 
+You can find our working files in this [Shared Drive](https://drive.google.com/drive/folders/15LC87y1itksHIRGUsOX4qBqt_M4nZjGB?usp=sharing)
+
+[Phone Video Demo](https://drive.google.com/drive/u/0/folders/15LC87y1itksHIRGUsOX4qBqt_M4nZjGB)
+[Tablet Video Demo](https://drive.google.com/drive/u/0/folders/15LC87y1itksHIRGUsOX4qBqt_M4nZjGB)
+
 ---
 
 ## Table of Contents
