@@ -91,6 +91,7 @@ Event Echo solves these by providing a **shared, location-tied memory wall**.
 - **Memory Upload:** Each user can upload one photo and one reflection per event.
 - **Memory Wall:** Scrollable timeline/grid of all uploaded memories, with integrated upvotes.
 - **Authentication:** Basic login/signup for user accounts.
+- **Profile:** Users can create and edit authenticated profiles from which they can see their attended, created, and recent events.
 - **Firebase Database:** Store users, events, and memories.
 - **Navigation:** Users can navigate using top and bottom bars, profile menu, clickable components, and back buttons (Jetpack Navigation).
 
