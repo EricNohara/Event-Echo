@@ -54,6 +54,10 @@ fun ProfileScreen(
     val scaffoldDirective = calculateStandardPaneScaffoldDirective(adaptiveInfo)
     val isTablet = scaffoldDirective.maxHorizontalPartitions > 1
 
+    LaunchedEffect(Unit) {
+        viewModel.refreshUser()
+    }
+
     Scaffold { padding ->
         if (uiState.isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

@@ -154,12 +154,12 @@ fun AppNavGraph(navController: NavHostController) {
             route = Routes.MemoryView.route,
             arguments = listOf(
                 navArgument("eventId") { type = NavType.StringType },
-                navArgument("userId") { type = NavType.StringType }
+                navArgument("userId") { type = NavType.StringType },
             )
         ) { entry ->
             val eventId = entry.arguments?.getString("eventId") ?: ""
             val userId = entry.arguments?.getString("userId") ?: ""
-            MemoryViewScreen(navController, eventId, userId)
+            MemoryViewScreen(navController, profileViewModel, eventId, userId)
         }
     }
 }
